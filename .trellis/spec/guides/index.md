@@ -89,6 +89,23 @@ This single habit prevents most "forgot to update X" bugs.
 
 ---
 
+## Task Artifact Workflow
+
+The full Trellis SDD (Spec-Driven Development) task cycle:
+
+| Phase | Artifacts | Who Provides |
+|-------|-----------|--------------|
+| Plan | `prd.md` | AI + PM |
+| Plan | `design.md` (complex tasks) | AI |
+| Plan | `implement.md` (complex tasks) | AI |
+| Plan | `test-cases.md` | **QA / Product** |
+| Execute | Code + lint + type-check | AI |
+| Finish | `trellis-check` → verify against all artifacts including test cases | AI |
+
+`test-cases.md` bridges the gap between code-level quality (lint, type-check) and business-level acceptance (does the feature actually work as expected?). QA provides it during planning, AI verifies every checkbox before commit.
+
+---
+
 ## Contributing
 
 Found a new "didn't think of that" moment? Add it to the relevant guide.

@@ -38,6 +38,17 @@ Questions to answer:
 
 ## Testing Requirements
 
+### Business Test Case Verification
+
+When the current task contains `test-cases.md` (located at `{TASK_DIR}/test-cases.md`), the Phase 2.2 check step must:
+
+1. Locate `test-cases.md` in the active task directory
+2. Walk through every checkbox under Smoke Test — all must pass before the task can move to Phase 3.4 commit
+3. Walk through every scenario checkbox under Functional Test — fix any failures or document known limitations in the task's `prd.md`
+4. Record the result: passed / failed-with-known-issues
+
+### Code-Level Testing
+
 <!-- What level of testing is expected -->
 
 (To be filled by the team)
