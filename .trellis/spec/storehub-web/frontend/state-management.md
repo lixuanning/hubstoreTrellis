@@ -86,15 +86,76 @@ UserInfo
 
 ---
 
-## 3 种角色体系
+## 双轨权限体系
 
-| key | roleCode | 角色名称 |
-|-----|----------|---------|
-| `mdj` | `bgms_mdj` | 门店店长 |
-| `pqjl` | `bgms_pqjl` | 片区经理 |
-| `jms` | `bgms_jms` | 加盟商 |
+与 uniapp 共用同一 `getUserInfo` 接口，存在**两套并行的权限路径**：
 
-> 与 uniapp 的 8 角色体系相比，web 仅显式使用 3 种；其余角色通过 `roleCode` 直接比对 `roleMenuList` 控制。
+### 路径 1：3 种固定角色 — roleCode + stores 门店权限
+
+| key | roleCode | 角色名称 | 权限来源 |
+|-----|----------|---------|---------|
+| `mdj` | `bgms_mdj` | 门店店长 | `stores[]` → 管理的门店 |
+| `pqjl` | `bgms_pqjl` | 片区经理 | `stores[]` → 片区门店 |
+| `jms` | `bgms_jms` | 加盟商 | `stores[]` → 加盟门店 |
+
+其余角色走 `roleCode` 直接比对 `roleMenuList` 控制菜单权限。
+
+### 路径 2：自定义角色 — dateRange 层级数据权限
+
+自定义角色不走 `stores[]`，通过 `dateRange.type` + `dateRange.scopeList` 按组织层级查看数据。
+
+#### orgType 枚举
+
+web 使用自有的 3 套组织类型枚举（定义在 `src/views/dailyClearing/config/common.js`）：
+
+| 层级 | dailyClearingOrgType (后端) | userCenterOrgType (个人中心) | goodsListOrgTypeEnum (商品查询) |
+|------|---------------------------|---------------------------|-------------------------------|
+| 集团 | `JT: -1` | `JT: '0'` | `JT: 'JT'` |
+| 大区 | `DQ: 0` | `DQ: '0'` | `DQ: 'BIGREGN'` |
+| 区域 | `QY: 1` | `QY: '1'` | `QY: 'REGN'` |
+| 片区 | `PQ: 2` | `PQ: '2'` | `PQ: 'AREA'` |
+| 门店 | `MD: 3` | `MD: '3'` | `MD: 'STORE'` |
+
+#### 权限判定函数（common.js）
+
+```javascript
+// getRoleOrgDtos() — 将 dateRange 转为后端接口参数
+// 集团（type='0' 且 scopeList 含 '*'）→ { orgType: -1, codes: ['0'] }
+// 非集团 → { orgType: Number(type), codes: scopeList.map(i => i.value) }
+
+// getMaxOrg(dateRange) — 判断最大权限范围
+// scopeList.length === 1 → 单店/单区域 → 直接跳转对应层级
+// scopeList.length > 1  → 多选 → 列表前插入"全部"选项
+
+// hasDataPermission(dateRange) — 无权限判断
+// !scopeList || scopeList.length <= 0 → 跳转 /dataForbidden
+
+// getCompleteOrg({ orgType, value, label }) — 下钻时查询完整层级链路
+// 调用 dailyGetOrgHierarchy 接口向上追溯区域/大区/片区
+```
+
+#### 层级下钻（Drill-Down）
+
+web 的下钻实现在**日清结算模块**（非首页），通过 `orgCascaderList.vue` 级联选择器 + 商品详情页列表点击：
+
+```
+orgCascaderList (JT → 大区 → 区域 → 片区 → 门店 五级级联)
+  ├── initMaxOrg() — 从 dateRange 初始化最大权限范围
+  ├── loadChildren() — 调用 dailyGetActiveOrgList 按层级异步加载子级
+  ├── selectItem() — 用户选择某级后加载下一级子项
+  └── 商品详情页 orgInfoClick → getCompleteOrg() → 自动切换 Tab 层级
+```
+
+#### 与 uniapp 实现差异
+
+| 维度 | uniapp | web |
+|------|--------|-----|
+| 固定角色数量 | 8 种 | 3 种 |
+| orgType 枚举 | `DATE_RANGE_TYPE` + `ORG_ROLE` | `dailyClearingOrgType` + `userCenterOrgType` |
+| 角色映射 | `DATE_RANGE_TO_ORG_ROLE_MAP` | 直接判 `type` + `scopeList` |
+| 层级下钻位置 | 首页 homeAuth Hook | 日清结算 orgCascaderList |
+| 下钻接口 | `getStoreLvlsByLvlData` | `dailyGetActiveOrgList` + `dailyGetOrgHierarchy` |
+| isSysInnerRole | 区分内置/自定义角色 | 不使用此字段 |
 
 ---
 
@@ -207,3 +268,6 @@ router.beforeEach(async (to, from, next) => {
 | 菜单生成 | 无动态路由（TabBar 静态） | 静态路由 + 守卫过滤 |
 | 权限函数 | hasMenuPermission / isOneOfCurrentUserRoles / hasPostType | 同上 + hasPositionPermission / hasAnyRolePermission |
 | 登录入口 | 微信/H5 双通道 | 仅 H5（`h5Login`） |
+| 双轨-自定义角色 | `DATE_RANGE_TYPE`+`ORG_ROLE` 映射 | `dailyClearingOrgType` 直接比对 |
+| 双轨-下钻位置 | 首页 homeAuth | 日清结算 orgCascaderList |
+| 双轨-下钻接口 | `getStoreLvlsByLvlData` | `dailyGetActiveOrgList`+`dailyGetOrgHierarchy` |
