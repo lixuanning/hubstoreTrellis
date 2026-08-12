@@ -147,18 +147,100 @@ positionList[].stores[]         ←关联→    roleCode + postTypeCode
 
 ---
 
-## 8 种角色体系
+## 双轨权限体系
 
-| key | roleCode | 角色名称 | 说明 |
-|-----|----------|---------|------|
-| `m` | `bgms_dz` | 店长 | 门店管理核心角色 |
-| `d` | `bgms_dy` | 店员 | 门店执行角色 |
-| `j` | `bgms_jms` | 加盟商 | 加盟门店角色 |
-| `p` | `bgms_pqjl` | 片区经理 | 管理多个门店 |
-| `f` | `bgms_fsdc` | 防损督察 | 巡店检查角色 |
-| `y` | `bgms_yyjl` | 运营经理 | 运营管理角色 |
-| `z` | `bgms_qz` | 区总 | 区域负责人 |
-| `q` | `bgms_qt` | 其他 | 自定义角色（如"单大区-功能-ym"） |
+系统存在**两套并行的权限路径**，用户可能同时拥有标准角色和自定义角色：
+
+### 路径 1：8 种固定角色 — stores 门店权限
+
+内置角色（`isSysInnerRole === "1"`），走 `stores[]` 门店列表：
+
+| key | roleCode | 角色名称 | 权限来源 |
+|-----|----------|---------|---------|
+| `m` | `bgms_dz` | 店长 | `stores[]` → 管理的门店 |
+| `d` | `bgms_dy` | 店员 | `stores[]` → 所属门店 |
+| `j` | `bgms_jms` | 加盟商 | `stores[]` → 加盟门店 |
+| `p` | `bgms_pqjl` | 片区经理 | `stores[]` → 片区门店 |
+| `f` | `bgms_fsdc` | 防损督察 | `stores[]` → 巡店门店 |
+| `y` | `bgms_yyjl` | 运营经理 | `stores[]` → 管辖门店 |
+| `z` | `bgms_qz` | 区总 | `stores[]` → 区域门店 |
+| `q` | `bgms_qt` | 其他（兜底） | 自定义角色入口 |
+
+### 路径 2：自定义角色 — dateRange 层级数据权限
+
+自定义角色（`isSysInnerRole !== "1"`，如"单大区-功能-ym"），不走 `stores[]`，而是通过 `dateRange` 按组织层级查看数据：
+
+#### dateRange.type 与组织层级映射
+
+通过 `DATE_RANGE_TO_ORG_ROLE_MAP` 将后端的 `dateRange.type` 映射为前端组织角色：
+
+| dateRange.type | 含义 | 映射组织角色 | 说明 |
+|----------------|------|-------------|------|
+| `"3"` | STORE 门店级 | `j` (加盟商) 或 `m` (店长) | 看具体门店数据 |
+| `"2"` | DISTRICT 片区级 | `p` (片区经理) | 看片区内门店汇总 |
+| `"1"` | REGIONAL 区域级 | `z` (区总) | 看区域下片区汇总 |
+| `"0"` | NATIONAL 全国级 | `a` (集团) 或 `q` (大区) | scopeList=`*` 为集团，否则为大区 |
+
+```
+dateRange 组织层级体系（自上而下）：
+  集团 (a) → 大区 (q) → 区域 (z) → 片区 (p) → 门店 (m/j)
+  GROUP    LARGE_REGION  REGION    DISTRICT   STORE
+   type=0    type=0*      type=1    type=2     type=3
+```
+
+#### 下钻（Drill-Down）逻辑
+
+自定义角色支持层级下钻，通过首页下拉选择器切换查看层级：
+
+```
+集团 (a) 选择"区域X" → 下钻到 REGIONAL 页 → 看到该区域下所有片区的汇总
+                            选择"片区Y" → 下钻到 DISTRICT 页 → 看到该片区下所有门店的汇总
+大区 (q) 选择"片区Z" → 下钻到 DISTRICT 页 → 看到该片区数据
+区域 (z) 选择"片区W" → 下钻到 DISTRICT 页 → 看到该片区数据
+```
+
+**实现位置：** `homeAuth.ts` 中 `initData()` 根据角色类型异步调用 `getStoreLvlsByLvlData` 获取下级组织列表。
+
+#### 首页 4 级页面权限码
+
+不同层级下首页展示不同的权限码集合：
+
+| 层级 (PAGE_LEVEL) | 页面权限前缀 | 说明 |
+|-------------------|-------------|------|
+| `home` | `bgms_sy_*` | 汇总首页（集团/大区/区域汇总视图） |
+| `regional` | `bgms_sy_xzqyym_*` | 下钻区域页面 |
+| `district` | `bgms_sy_xzpqym_*` | 下钻片区页面 |
+| `store` | `bgms_sy_xzmdym_*` | 下钻门店页面 |
+
+#### 角色可见性控制（isVisible）
+
+`homeAuth.ts` 中 `isVisible()` 控制首页不同角色卡片在特定层级是否可见：
+
+```
+m (店长):    dateRangeType !== '3' 时可见  ← 门店级角色在门店页不可见，上级可见
+j (加盟商):  dateRangeType !== '3' 时可见  ← 同上
+p (片区):    dateRangeType !== '2' 时可见  ← 片区级角色在片区页不可见
+q (大区):    dateRangeType !== '1' 时可见  ← 大区角色在区域页不可见
+z (区域):    dateRangeType !== '10' 时可见 ← 区域角色在大区页不可见
+a (集团):    始终可见
+```
+
+---
+
+## 两套权限路径对比
+
+```
+              ┌─── 固定角色 ─── roleCode (bgms_dz/jms/pqjl...)
+              │                    ├── roleMenuList → 菜单权限码
+              │                    └── stores[] → 门店数据
+用户 ─ 角色 ──┤
+              │                   ┌── dateRange.type → 组织层级
+              └─── 自定义角色 ─── ──┤
+                                  ├── dateRange.scopeList → 可见范围
+                                  └── 下钻 → 切换查看层级
+```
+
+一个用户可同时拥有两套角色（如既有店长 stores[] 权限，又有片区自定义 dateRange 权限），通过**切换岗位/角色**在两者间切换。
 
 ---
 
