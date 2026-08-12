@@ -160,7 +160,6 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - `prd.md` — requirements, constraints, and acceptance criteria. Do not put technical design or execution checklists here.
 - `design.md` — technical design for complex tasks: boundaries, contracts, data flow, tradeoffs, compatibility, rollout / rollback shape.
 - `implement.md` — execution plan for complex tasks: ordered checklist, validation commands, review gates, and rollback points.
-- `test-cases.md` — QA business test cases (smoke + scenario + edge cases), supplied by QA or product. Referenced by `prd.md` acceptance criteria and verified during Phase 2.2 check.
 - `implement.jsonl` / `check.jsonl` — spec and research manifests for sub-agent context. They do not replace `implement.md`.
 - Lightweight tasks may be PRD-only. Complex tasks must have `prd.md`, `design.md`, and `implement.md` before `task.py start`.
 
@@ -242,12 +241,13 @@ Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, p
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
+- 3.1 Release test verification `[on demand]`
 - 3.2 Debug retrospective `[on demand]`
 - 3.3 Spec update `[required · once]`
 - 3.4 Commit changes `[required · once]`
 - 3.5 Wrap-up reminder
 
-> Note: step 3.1 was folded into 2.2 (last-iteration full-scope check) and 3.4 (commit preamble). Numbering kept stable to avoid breaking external references.
+> Note: 3.1 fires only when `.trellis/releases/<version>/test-cases.md` exists. Former step 3.1 was folded into 2.2/3.4.
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in
@@ -538,8 +538,7 @@ Spawn the check sub-agent:
 
 The check agent's job:
 - Review code changes against specs
-- Review code changes against `prd.md`, `design.md` if present, `implement.md` if present, and `test-cases.md` if present
-- Walk through each scenario in `test-cases.md` and verify the implementation satisfies every checkbox
+- Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
 - Auto-fix issues it finds
 - Run lint and typecheck to verify
 
@@ -551,13 +550,12 @@ Load the `trellis-check` skill and verify the code per its guidance:
 - Spec compliance
 - lint / type-check / tests
 - Cross-layer consistency (when changes span layers)
-- If `test-cases.md` exists, walk through each scenario and verify every checkbox
 
 If issues are found → fix → re-check, until green.
 
 [/codex-inline, Kilo, Antigravity, Devin]
 
-**Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. If `test-cases.md` exists, perform a final walk-through of every scenario. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
+**Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
 
 #### 2.3 Rollback `[on demand]`
 
@@ -570,6 +568,22 @@ If issues are found → fix → re-check, until green.
 ## Phase 3: Finish
 
 Goal: ensure code quality, capture lessons, record the work.
+
+#### 3.1 Release test verification `[on demand]`
+
+Triggered only before a release, when QA has delivered the version-level test cases.
+
+**Location**: `.trellis/releases/<version>/test-cases.md`
+
+**Workflow**:
+1. QA writes `test-cases.md` under `.trellis/releases/<version>/` (smoke + functional scenarios)
+2. Before the release commit, load this file and walk through every checkbox
+3. Smoke tests MUST all pass before the release can be finalized
+4. Functional test failures get documented as known limitations in the release notes
+
+**Relationship to task-level check**: Phase 2.2 covers code quality (lint, type-check, curl). 3.1 covers business acceptance (does the whole version work end-to-end?). Development tasks are small and frequent; test cases are version-level and QA-driven. They are separate concerns.
+
+Skip this step when `test-cases.md` does not exist for the current version.
 
 #### 3.2 Debug retrospective `[on demand]`
 

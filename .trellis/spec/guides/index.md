@@ -89,20 +89,29 @@ This single habit prevents most "forgot to update X" bugs.
 
 ---
 
-## Task Artifact Workflow
+## SDD Workflow
 
-The full Trellis SDD (Spec-Driven Development) task cycle:
+Trellis SDD (Spec-Driven Development) works in two layers:
+
+### Task-Level (Daily Development)
 
 | Phase | Artifacts | Who Provides |
 |-------|-----------|--------------|
 | Plan | `prd.md` | AI + PM |
 | Plan | `design.md` (complex tasks) | AI |
 | Plan | `implement.md` (complex tasks) | AI |
-| Plan | `test-cases.md` | **QA / Product** |
-| Execute | Code + lint + type-check | AI |
-| Finish | `trellis-check` → verify against all artifacts including test cases | AI |
+| Execute | Code + lint + type-check + curl | AI |
 
-`test-cases.md` bridges the gap between code-level quality (lint, type-check) and business-level acceptance (does the feature actually work as expected?). QA provides it during planning, AI verifies every checkbox before commit.
+Tasks are small and frequent — a single feature may span 5-10 tasks. Code-level quality (lint, type-check, curl self-check) is covered in Phase 2.2.
+
+### Version-Level (Pre-Release)
+
+| Step | Artifacts | Who Provides |
+|------|-----------|--------------|
+| Phase 3.1 | `.trellis/releases/<version>/test-cases.md` | **QA** |
+| Phase 3.1 | Walk through every scenario, verify all smoke tests pass | AI |
+
+`test-cases.md` is **version-level**, not task-level. QA writes it once per version, AI runs it once before the release commit. Daily task development does not touch it.
 
 ---
 
