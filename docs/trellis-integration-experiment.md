@@ -218,3 +218,75 @@ storehub/
 ├── AGENTS.md                                     # AI 入口文件
 └── .trae/memory/projects/...project_memory.md   # 原始上下文（已迁移）
 ```
+
+---
+
+## 8. 实验深化：工程设计决策（2026-08-12 补充）
+
+初始实验完成后，在实际使用中沉淀了以下工程设计决策：
+
+### 8.1 SDD 闭环验证
+
+Trellis 的 SDD（Spec-Driven Development）三阶段在实际对话中形成了完整闭环：
+
+```
+Phase 1 (Spec)  → Phase 2 (Develop) → Phase 3 (Drive back to Spec)
+     ↑                                        │
+     └────────────────── 下次对话 ──────────────┘
+```
+
+实验期间踩坑 → 写入 spec → 下次自动避免的实例：
+
+| 踩坑 | 写入 spec | 效果 |
+|------|----------|------|
+| API 路径三端不一致 → 404 | `storehub-servless/backend/index.md` 跨端路径对齐 Pitfall | 再写接口自动对齐 |
+| wd-popup bottom:0 被组件覆盖 | `storehub-uniapp/frontend/index.md` TabBar 安全区 | 再写弹窗自动留 110rpx |
+| slr debug 新增文件不刷新路由 | `storehub-servless/backend/index.md` 404 Pitfall | 新增文件自动提示重启 |
+
+### 8.2 记忆与知识管理设计
+
+经过评估，**不激活个人 journal（每日会话流水）**，理由：
+
+- 有效信息已在 spec 和 tasks 中沉淀
+- 对话中的试错、撤回、重复信息记录没有价值
+- journal 行数增长会浪费 token（AI 每次启动都读）
+- 多成员扩展时 spec 是共享规范，journal 是个人流水无助于协作
+
+详细设计见 [.trellis/spec/guides/index.md](file:///Users/lidie/a-code/a-pgy/storehub/.trellis/spec/guides/index.md) 的「记忆与知识管理设计」章节。
+
+### 8.3 编码规范补充
+
+在 Trellis 原生规范之外，补充了两条团队共识规则：
+
+1. **中文注释规范** — 文件头、复杂逻辑、非直观样式必须中文注释
+2. **Commit ≠ Push** — 提交默认只到本地，明确说"推送"才 push
+
+### 8.4 测试用例设计
+
+test-cases.md 放在版本级（`.trellis/releases/<version>/`）而非任务级：
+
+- **日常开发（task 级）**：只做 lint/type-check/curl，不维护用例
+- **提测前（version 级）**：QA 把用例放进来，AI 跑一次全量验收
+
+### 8.5 文档体系
+
+| 层 | 位置 | 受众 |
+|---|---|---|
+| AI 工程规范 | `.trellis/spec/` | AI（编码时自动注入） |
+| 人类认知文档 | `docs/` | 团队成员（手动阅读） |
+
+### 8.6 工程化配套
+
+- `start-dev.sh` — 一键启动 4 端 dev 环境
+- `mcp.config.example.json` — 6 个 MCP Server 配置模板（含 CoDesign 替代方案）
+- storehub 根目录 `git init` + GitHub remote — 工程化配置独立版本控制（.gitignore 排除 4 个业务仓库）
+
+---
+
+## 9. 推广建议（更新）
+
+原推广建议（6.3 节）基础上补充：
+
+- 新人加入只需：clone storehub 工程仓库 → `cp mcp.config.example.json .trae/mcp.json` → 填入 Token → 开始对话
+- 不需要培训 Trellis 命令，对话中 AI 自动处理
+- spec 维护由团队共识驱动：谁发现规律性错误谁让 AI 写进 spec

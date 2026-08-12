@@ -68,13 +68,60 @@
 4. 后续一切 AI 自动完成
 ```
 
-### 维护规范（偶尔做，一天一次或更少）
+### 维护规范（偶尔做）
 
 ```
 当你发现 AI 犯了一个规律性错误时：
   → 告诉 AI "把这条规则加到 spec 里"
   → AI 自动写入 spec，以后不会再犯
 ```
+
+**当前已沉淀的规则示例**：
+
+| 规则 | 存放位置 | 来源 |
+|------|---------|------|
+| 三端 API 路径必须完全一致（文件名 = 路径） | `storehub-servless/backend/index.md` | 404 踩坑 |
+| slr debug 新增文件后必须重启 | `storehub-servless/backend/index.md` | 404 踩坑 |
+| wd-popup 底部安全区三段式方案 | `storehub-uniapp/frontend/index.md` | TabBar 遮挡 |
+| 登录白名单：临时加 → curl 验证 → 删除 | `storehub-servless/backend/index.md` | 401 踩坑 |
+| 中文注释 + commit 不自动 push | 各包 `quality-guidelines.md` | 团队共识 |
+
+---
+
+## SDD 三阶段闭环
+
+Trellis 的核心工作流叫 SDD（Spec-Driven Development）：
+
+```
+S (Spec)           → Phase 1: 读规范、写 PRD，确定"好的代码长什么样"
+D (Development)    → Phase 2: 按规范写代码 + lint/type-check/curl 自检
+D (Drive back)     → Phase 3: 本次踩的坑写回规范，下次自动更聪明
+```
+
+第二个 D 是闭环的关键——不是"测试"或"部署"，而是**把经验写回 spec 让下一次对话自动更聪明**。
+
+---
+
+## 记忆与知识管理
+
+项目遵循 **"项目级沉淀优先，个人流水不存"** 原则。
+
+| 存什么 | 位置 | 为什么 |
+|--------|------|--------|
+| 规范、架构、踩坑清单 | `.trellis/spec/` | 团队共享、AI 自动读取、长期有效 |
+| 任务 PRD、设计决策 | `.trellis/tasks/` | 版本化、可追溯 |
+| ~~个人操作流水~~ | `.trellis/workspace/journal-*.md` | **不激活**：对话含噪音、信息已沉淀在 spec、费 token |
+
+未来团队其他人打开项目，AI 读完 `spec/` 就能理解全貌，不需要翻阅任何人的操作流水。
+
+---
+
+## 编码规范执行
+
+除 Trellis 原生规范外，项目补充了两条自定义规则：
+
+1. **中文注释** — 文件头、复杂逻辑、非直观样式必须用中文注释（团队协作需求）
+2. **Commit ≠ Push** — 提交只到本地，需要明确说"推送"才 push。方便随时 `git reset` 回退
 
 ---
 
