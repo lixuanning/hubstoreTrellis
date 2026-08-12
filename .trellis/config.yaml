@@ -1,44 +1,37 @@
-# Trellis Configuration
-# Project-level settings for the Trellis workflow system
+# Trellis 配置文件 — storehub Monorepo 项目
+# 项目级别的 Trellis 工作流配置。所有配置项都有默认值，只覆盖需要改的。
+#
+# 核心概念：
+# - Session Recording：开发会话日志（journal），记录每次开发的上下文
+# - Task Lifecycle：任务生命周期（create → start → finish → archive）
+# - Monorepo Packages：4 个独立 git 子仓库的声明
+# - Channel Worker：多 agent 协作时的并发控制
 #
 # All values have sensible defaults. Only override what you need.
 
 #-------------------------------------------------------------------------------
-# Session Recording
+# Session Recording — 开发会话记录
+# 每次编码会话自动记录到 .trellis/workspace/<developer>/journal-*.md
 #-------------------------------------------------------------------------------
 
-# Commit message used when auto-committing journal/index changes
-# after running add_session.py
+# 自动提交 journal/index 变动时使用的 commit message
 session_commit_message: "chore: record journal"
 
-# Maximum lines per journal file before rotating to a new one
+# 单个 journal 文件最大行数，超过后自动滚动到新文件
 max_journal_lines: 2000
 
 #-------------------------------------------------------------------------------
-# Session Auto-Commit
+# Session Auto-Commit — 自动提交行为
+# 控制 add_session.py / task.py archive 是否自动 git commit
+# false = 只写文件不 commit，由你手动决定是否提交
 #-------------------------------------------------------------------------------
-
-# Auto-commit behavior for session journal + task archive operations.
-# - true (default): scripts auto-stage and auto-commit journal / task changes
-#   after add_session.py / task.py archive runs.
-# - false: scripts do not touch git. Files (journal-*.md, task archive moves)
-#   are still written to disk; you decide whether to git add / commit.
-#
-# Use `false` if your project's .gitignore intentionally excludes `.trellis/`
-# and you want session data kept local-only, or if you prefer to review
-# staged changes manually before each commit.
-#
-# Accepts: true / false / yes / no / 1 / 0 / on / off (case-insensitive).
-#
 # session_auto_commit: true
 
 #-------------------------------------------------------------------------------
-# Task Lifecycle Hooks
+# Task Lifecycle Hooks — 任务生命周期钩子
+# 任务事件（创建/开始/完成/归档）后自动执行的 shell 命令。
+# 钩子失败只打印警告，不阻塞主流程。
 #-------------------------------------------------------------------------------
-
-# Shell commands to run after task lifecycle events.
-# Each hook receives TASK_JSON_PATH environment variable pointing to task.json.
-# Hook failures print a warning but do not block the main operation.
 #
 # hooks:
 #   after_create:
@@ -51,12 +44,10 @@ max_journal_lines: 2000
 #     - "echo 'Task archived'"
 
 #-------------------------------------------------------------------------------
-# Monorepo / Packages
+# Monorepo / Packages — 多仓库声明
+# 声明项目包含的子仓库。`git: true` 表示该目录有独立的 .git 仓，
+# Trellis 会在 git 操作时把它当作独立仓库处理。
 #-------------------------------------------------------------------------------
-
-# Declare packages for monorepo projects.
-# Trellis auto-detects workspaces during `trellis init`, but you can also
-# configure them manually here.
 #
 # packages:
 #   frontend:
@@ -77,27 +68,11 @@ max_journal_lines: 2000
 # default_package: frontend
 
 #-------------------------------------------------------------------------------
-# Channel worker OOM guard
+# Channel worker OOM guard — 并发 worker 管控
+# trellis channel spawn 的 worker 数量和空闲超时控制，防止 OOM。
+# idle_timeout: 0 = 不自动回收空闲 worker
+# max_live_workers: 0 = 不限制并发 worker 数量
 #-------------------------------------------------------------------------------
-# Default safeguards for `trellis channel spawn` workers. The guard runs
-# at spawn time (cleans expired idle workers, then enforces the live-worker
-# budget) and inside each supervisor (self-terminates a worker that stays
-# continuously idle past `idle_timeout`).
-#
-# Precedence: CLI flag > env var (TRELLIS_CHANNEL_WORKER_IDLE_TIMEOUT /
-# TRELLIS_CHANNEL_MAX_LIVE_WORKERS) > this config > built-in default.
-#
-# `idle_timeout: 0` disables idle cleanup (workers can sit idle forever
-# unless explicitly killed or given `--timeout`).
-# `max_live_workers: 0` disables the spawn-time budget check.
-#
-# `trusted_context_dirs` extends the `--file`/`--jsonl`/`--agent` containment
-# check beyond the worker cwd — useful when `.trellis/tasks` or
-# `.trellis/workspace` is a symlink to an external directory. Realpaths under
-# any listed dir are accepted in addition to cwd.
-# `auto_trust_trellis_symlinks: false` disables the narrow auto-trust of
-# `.trellis/tasks` / `.trellis/workspace` when either is itself a top-level
-# symlink (auto-trust is on by default).
 #
 channel:
   worker_guard:
@@ -108,23 +83,10 @@ channel:
   # auto_trust_trellis_symlinks: false
 
 #-------------------------------------------------------------------------------
-# Codex (dispatch behavior)
+# Codex — 子 agent 调度模式
+# "auto": 实现/检查/研究任务用子 agent 执行（推荐）
+# "inline": 全部在主会话中执行（调试用）
 #-------------------------------------------------------------------------------
-# Codex-only knob; other platforms ignore it. Default ("auto") dispatches
-# trellis-implement / trellis-check / trellis-research sub-agents. This does
-# not rely on inherited parent transcripts: `fork_turns` remains
-# caller-controlled, while Codex's native SubagentStart hook injects task
-# context when trusted and child-side loading remains the fallback when it is
-# unavailable. Set to "inline" only to keep implementation and checks in the
-# main session. "sub-agent" remains a backwards-compatible alias for "auto".
-# Invalid explicit values safely use inline mode.
-#
-# In "auto" mode, dispatched sub-agents inherit the main session's model
-# unless you pin one. To use a cheaper/faster model for implement/check/
-# research sub-agent work, edit `model` / `model_reasoning_effort` directly
-# on the generated `.codex/agents/trellis-*.toml` files (see the commented
-# hint lines in those files) — there is no config.yaml knob for this,
-# `trellis update` preserves your edits across regeneration.
 #
 # codex:
 #   dispatch_mode: auto  # or "inline"; legacy alias: "sub-agent"
@@ -157,18 +119,19 @@ channel:
 # prompt_injection:
 #   skip_keyword: "no-trellis"   # "" disables the escape hatch entirely
 
-# Auto-detected monorepo packages
+# 本项目 4 个子仓库声明（由 trellis init 自动检测，手动修正后保留）
+# 每个都是独立的 git 仓库（git: true），Trellis 不跨仓操作
 packages:
-  ai-store-api:
+  ai-store-api:           # NestJS 后端服务（:3000）
     path: ai-store-api
     git: true
-  storehub-servless:
+  storehub-servless:      # Node 中间件/代理层（:3001）
     path: storehub-servless
     git: true
-  storehub-uniapp:
+  storehub-uniapp:        # UniApp 企业微信小程序 + H5
     path: storehub-uniapp
     git: true
-  storehub-web:
+  storehub-web:           # Vue3 H5 子应用（webview 嵌入）
     path: storehub-web
     git: true
 default_package: ai-store-api

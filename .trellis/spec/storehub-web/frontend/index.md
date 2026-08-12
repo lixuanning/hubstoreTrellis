@@ -2,6 +2,10 @@
 
 > **Pre-read**: [Architecture Overview](../../guides/architecture-overview.md)
 >
+> Vue 3 + Vite H5 子应用，**通过 webview/iframe 嵌入企业微信小程序**。与 uniapp 主应用共享业务数据（subAppStore），登录走 preLogin → cookie → 子应用页面的链路。
+>
+> <!-- 以下英文由 Trellis 维护，中文注释为团队补充 -->
+>
 > Vue 3 + Vite H5 pages embedded in miniapp via webview/iframe.
 
 ---

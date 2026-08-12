@@ -1,8 +1,11 @@
 # Backend Development Guidelines — ai-store-api
 
-> **Pre-read**: [Architecture Overview](../../guides/architecture-overview.md) — understand the full system before coding.
+> **Pre-read**: [Architecture Overview](../../guides/architecture-overview.md)
 >
-> Best practices for NestJS backend development in this package.
+> **必须预先理解**: NestJS 框架 + 本项目的 Response 归一化约定 + curl 自检机制。详见下方 Key Conventions。
+
+NestJS 后端服务（端口 3000）。基于 DashScope（阿里云大模型），负责核心业务逻辑和 AI 能力。
+<!-- 以下英文由 Trellis 维护，中文注释为团队补充 -->
 
 ---
 

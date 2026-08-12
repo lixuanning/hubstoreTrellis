@@ -1,12 +1,12 @@
-# Code Reuse Thinking Guide
+# Code Reuse Thinking Guide — 代码复用思维指南
 
-> **Purpose**: Stop and think before creating new code - does it already exist?
+> 写新代码之前，先停下来想一个问题：**这段逻辑是不是已经有人写过了？**
+>
+> 重复代码是 Bug 的头号来源。复制的代码越多，修复越困难、行为越不一致。
 
 ---
 
-## The Problem
-
-**Duplicated code is the #1 source of inconsistency bugs.**
+## The Problem — 为什么重复代码是问题
 
 When you copy-paste or rewrite existing logic:
 - Bug fixes don't propagate
@@ -15,48 +15,45 @@ When you copy-paste or rewrite existing logic:
 
 ---
 
-## Before Writing New Code
+## Before Writing New Code — 动手前先问自己
 
-### Step 1: Search First
+### Step 1: Search First — 全局搜索
 
 ```bash
-# Search for similar function names
+# 搜索相似的函数名
 grep -r "functionName" .
 
-# Search for similar logic
+# 搜索相似的逻辑
 grep -r "keyword" .
 ```
 
-### Step 2: Ask These Questions
+### Step 2: Ask These Questions — 灵魂 4 问
 
-| Question | If Yes... |
+| Question — 问题 | If Yes... — 解决方案 |
 |----------|-----------|
-| Does a similar function exist? | Use or extend it |
-| Is this pattern used elsewhere? | Follow the existing pattern |
-| Could this be a shared utility? | Create it in the right place |
-| Am I copying code from another file? | **STOP** - extract to shared |
+| 已经有类似的函数了吗？ | 复用或扩展它 |
+| 这个模式在别处用过吗？ | 遵循现有模式 |
+| 能抽成共享工具函数吗？ | 放在正确的公共位置 |
+| 我是不是在复制粘贴？ | **停！** 提取为共享模块 |
 
 ---
 
-## Common Duplication Patterns
+## Common Duplication Patterns — 常见重复模式
 
-### Pattern 1: Copy-Paste Functions
+### Pattern 1: Copy-Paste Functions — 复制粘贴函数
 
-**Bad**: Copying a validation function to another file
+**❌ 不好**: 把一个验证函数复制到另一个文件
+**✅ 正确**: 提取到共享工具目录，需要的地方 import
 
-**Good**: Extract to shared utilities, import where needed
+### Pattern 2: Similar Components — 高度相似的组件
 
-### Pattern 2: Similar Components
+**❌ 不好**: 建一个新组件，80% 和现有组件一样
+**✅ 正确**: 用 props/variants 扩展现有组件
 
-**Bad**: Creating a new component that's 80% similar to existing
+### Pattern 3: Repeated Constants — 重复的常量
 
-**Good**: Extend existing component with props/variants
-
-### Pattern 3: Repeated Constants
-
-**Bad**: Defining the same constant in multiple files
-
-**Good**: Single source of truth, import everywhere
+**❌ 不好**: 多个文件里定义同一个常量
+**✅ 正确**: 单一数据源，各处 import
 
 ### Pattern 4: Repeated Payload Field Extraction
 
