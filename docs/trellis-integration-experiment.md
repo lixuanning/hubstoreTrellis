@@ -241,7 +241,6 @@ Phase 1 (Spec)  → Phase 2 (Develop) → Phase 3 (Drive back to Spec)
 |------|----------|------|
 | API 路径三端不一致 → 404 | `storehub-servless/backend/index.md` 跨端路径对齐 Pitfall | 再写接口自动对齐 |
 | wd-popup bottom:0 被组件覆盖 | `storehub-uniapp/frontend/index.md` TabBar 安全区 | 再写弹窗自动留 110rpx |
-| slr debug 新增文件不刷新路由 | `storehub-servless/backend/index.md` 404 Pitfall | 新增文件自动提示重启 |
 
 ### 8.2 记忆与知识管理设计
 

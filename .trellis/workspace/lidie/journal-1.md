@@ -28,7 +28,6 @@
 ### 踩坑知识沉淀（已写入 spec）
 - wd-popup bottom:0 强行覆盖 → TabBar 安全区方案
 - serverless 文件路由 = 文件名 → 三端路径对齐
-- slr debug 静态路由需手动重启
 - login 白名单临时加 → curl → 删除流程
 
 ### 下一步

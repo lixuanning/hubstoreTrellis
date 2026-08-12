@@ -94,19 +94,21 @@ curl -s http://localhost:3001/<new-endpoint> -X POST \
 # Verify: { "code": 0, "data": {...} }
 ```
 
-### ⚠️ CRITICAL: 404 Pitfall — serverless runtime 重启机制
+### ⚠️ 404 Pitfall — 跨端路径不一致
 
-**坑**: 新增 POST/GET 文件后，tsc watch 会立即编译产物到 `dist/` 目录，但 `@pagoda-serverless/runtime` 进程（`slr debug`）**不监听文件变化**，不会自动加载新路由。直接 curl 会得到 `404 不存在的请求资源`，但实际上产物已生成在 `dist/<module>/<action>.post.js`。
+**坑**: 新增文件后 curl 返回 404，最常见的原因不是 serverless 进程没加载，而是**三端路径字符串不一致**。
 
-**自检前必做**：
+serverless 框架有热更新（tsc watch + slr debug 自动生效），不需要手动重启。
 
-1. 确认 `dist/` 下已生成对应 `.js` 文件：
-   ```bash
-   ls -la dist/<module>/<action>.post.{js,js.map}
-   ```
-2. 如果产物存在但 curl 404 → **必须重启 serverless 进程**才能验证。
-3. 重启后再次 curl 自检。
+**常见错误**：
+```
+文件: src/chat/postMessage.post.ts  →  URL: POST /chat/postMessage
+                                                              ^^^^^^^^^^
+uniapp 调: alova.Post('/chat/message')    ← 路径少了 Post!
+ai 端:    @Post() 不写参数               ← 默认只匹配根路径
+```
 
-**为什么容易踩**: tsc watch 输出新产物 ≠ runtime 注册了新路由。这是 serverless 框架的运行时限制，不是 bug。
-
-**预防措施**: 新增 serverless 路由后，先 `ls dist/` 确认编译产物，再重启进程，再 curl。**不要在未重启前就下结论"404 → 路由没生效"或修改代码重试**。
+**防止再犯**：
+1. 写完 serverless 文件后，核对文件名 `<action>.post.ts` 中的 `<action>` 部分
+2. 三端路径字符串**必须是完全相同的字符串**，不允许简化、缩写、省略
+3. curl `:3001` 自检即可，serverless 有热更新**不需要重启进程**

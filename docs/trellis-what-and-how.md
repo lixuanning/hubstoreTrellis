@@ -26,12 +26,20 @@
 
 ```
 .trellis/
-├── spec/          ← 项目的"说明书"，AI 每次对话前自动查阅
-├── tasks/         ← 开发任务的记录（需求、实现细节）
-├── workspace/     ← 每次对话的工作日志（跨天不会忘记）
-├── workflow.md    ← 开发流程指引（Plan → Execute → Finish）
-└── config.yaml    ← 子项目配置
+├── spec/          ← 项目"说明书"。AI 每次对话自动读取；踩坑后沉淀新规则到这里
+├── tasks/         ← 任务档案。只在明确说"创建 Trellis 任务"时生成；日常对话不产生
+├── workspace/     ← 个人日志。本项目不启用（有 spec 就够了，流水没意义）
+├── workflow.md    ← 开发流程。Trellis 自动维护，不需要手动改
+└── config.yaml    ← 基础配置。初始化后基本不改
 ```
+
+| 目录 | 谁来维护 | 什么时候变 |
+|------|---------|-----------|
+| `spec/` | AI（你一句话触发） | 发现规律性错误时，AI 写入新规则 |
+| `tasks/` | AI（你说"创建任务"后） | 走 Plan → Execute → Finish 流程时 |
+| `workspace/` | 不启用 | 不变（只有一份种子里程碑记录） |
+| `workflow.md` | Trellis CLI | `trellis update` 时自动刷新 |
+| `config.yaml` | 初始化时手动设一次 | 基本不变 |
 
 你可以把它理解为：
 
@@ -81,7 +89,6 @@
 | 规则 | 存放位置 | 来源 |
 |------|---------|------|
 | 三端 API 路径必须完全一致（文件名 = 路径） | `storehub-servless/backend/index.md` | 404 踩坑 |
-| slr debug 新增文件后必须重启 | `storehub-servless/backend/index.md` | 404 踩坑 |
 | wd-popup 底部安全区三段式方案 | `storehub-uniapp/frontend/index.md` | TabBar 遮挡 |
 | 登录白名单：临时加 → curl 验证 → 删除 | `storehub-servless/backend/index.md` | 401 踩坑 |
 | 中文注释 + commit 不自动 push | 各包 `quality-guidelines.md` | 团队共识 |
