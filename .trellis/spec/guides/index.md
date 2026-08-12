@@ -115,6 +115,48 @@ Tasks are small and frequent — a single feature may span 5-10 tasks. Code-leve
 
 ---
 
+## 记忆与知识管理设计
+
+本项目的 AI 知识管理遵循**"项目级沉淀优先，个人流水不存"**原则。
+
+### 两层架构
+
+| 层级 | 位置 | 粒度 | 是否激活 | 理由 |
+|------|------|------|----------|------|
+| **项目知识库（核心）** | `.trellis/spec/` + `.trellis/tasks/` | 规范、架构、任务 PRD | ✅ 激活 | 团队共享、长期有效、AI 每次对话自动读取 |
+| **个人开发日志（可选）** | `.trellis/workspace/<name>/journal-*.md` | 每次对话的操作流水 | ❌ 不激活 | 见下方决策分析 |
+
+### 为什么不激活个人 journal
+
+**Trellis 的 journal 设计初衷**是给没有 spec 体系的普通项目当"对话流水账"，防止 AI 在跨会话时丢失上下文。
+
+本项目的实际情况完全不同：
+
+1. **信息已沉淀** — 每条有效决策都写入了 `spec/`（TabBar 安全区、404 Pitfall、Response 归一化、三层 API……），journal 只是在重复存储
+2. **对话含噪音** — 真实的 AI 对话中不可避免有试错、反复修正、撤回，流水账记录这些没有意义
+3. **Token 成本** — journal 行数越多，AI 每次初始化越慢；去重筛选、维护成本高于沉淀的收益
+4. **多成员扩展** — 未来团队其他人打开项目，读 `spec/` 就能理解全貌，不需要翻阅每个人的操作流水
+
+### 多成员协作时的 AI 规范体系
+
+当团队扩展时，每个新开发者只需要：
+
+```
+打开项目 → AI 自动读取 .trellis/spec/ → 当场理解：
+  ├── 4 仓库架构与调用链路       (architecture-overview.md)
+  ├── 本仓库的编码规范与踩坑清单  (spec/<package>/index.md)
+  ├── 当前进行中的任务与 PRD      (tasks/<task>/)
+  └── 跨包通用的思维检查清单      (guides/code-reuse/ cross-layer/)
+```
+
+**不需要**：翻阅张三上周的 journal、同步李四的操作记录。
+
+### 唯一保留的种子记录
+
+[workspace/lidie/journal-1.md](../../workspace/lidie/journal-1.md) 只保留一份实验期里程碑摘要（< 20 行），作为新人快速了解"这个项目最近在做什么方向"的入口。日常不再维护。
+
+---
+
 ## Contributing
 
 Found a new "didn't think of that" moment? Add it to the relevant guide.
