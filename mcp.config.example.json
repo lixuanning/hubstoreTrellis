@@ -1,0 +1,60 @@
+{
+  "_note_about_codesign": "【重要】腾讯 CoDesign (codesign.qq.com) 当前 (2026.08) 没有官方/社区 MCP Server，也没有对外开放的设计稿 OpenAPI（仅提供 webhook 事件推送和 TAPD/CODING 协作）。建议先用「Filesystem MCP + CoDesign 导出标注切图」方案，下方写了 3 条路径说明。",
+  "mcpServers": {
+    "figma_DEPRECATED_USE_CODESIGN_FLOW": {
+      "_deprecated": true,
+      "_reason": "公司实际使用 CoDesign，不是 Figma。本条目仅保留，如未来切换 Figma 直接把 key 改成 figma 即可启用。",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-figma"],
+      "env": {
+        "FIGMA_PERSONAL_ACCESS_TOKEN": "REPLACE_WITH_YOUR_FIGMA_TOKEN",
+        "START_MCP_TIMEOUT_MS": "60000",
+        "RUN_MCP_TIMEOUT_MS": "120000"
+      }
+    },
+    "filesystem-storehub": {
+      "_description": "授权只读 4 个子仓库 src + trellis 规范 + 设计稿导出目录 designs/（CoDesign 切图/标注/画板导出 PNG 放到 designs/ 后，AI 配合视觉读图就能量尺寸、色值、还原 UI，效果接近 Figma MCP）。",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}/storehub-uniapp/src",
+        "${workspaceFolder}/storehub-web/src",
+        "${workspaceFolder}/ai-store-api/src",
+        "${workspaceFolder}/storehub-servless/src",
+        "${workspaceFolder}/.trellis/spec",
+        "${workspaceFolder}/designs"
+      ]
+    },
+    "apifox": {
+      "command": "npx",
+      "args": ["-y", "apifox-mcp-server@latest"],
+      "env": {
+        "APIFOX_API_BASE": "https://api.apifox.cn",
+        "APIFOX_ACCESS_TOKEN": "REPLACE_WITH_YOUR_APIFOX_TOKEN",
+        "APIFOX_PROJECT_ID": "REPLACE_WITH_YOUR_PROJECT_ID"
+      }
+    },
+    "amap": {
+      "command": "npx",
+      "args": ["-y", "@amap/mcp-server@latest"],
+      "env": {
+        "AMAP_WEB_SERVICE_KEY": "REPLACE_WITH_YOUR_AMAP_KEY"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REPLACE_WITH_YOUR_GITHUB_PAT"
+      }
+    },
+    "tavily-search": {
+      "command": "npx",
+      "args": ["-y", "@tavily/mcp-server"],
+      "env": {
+        "TAVILY_API_KEY": "REPLACE_WITH_YOUR_TAVILY_KEY"
+      }
+    }
+  }
+}

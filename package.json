@@ -1,0 +1,10 @@
+{
+  "name": "storehub-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "4-package monorepo root (ai-store-api + storehub-servless + storehub-uniapp + storehub-web)",
+  "scripts": {
+    "start:dev": "./start-dev.sh",
+    "dev": "./start-dev.sh"
+  }
+}

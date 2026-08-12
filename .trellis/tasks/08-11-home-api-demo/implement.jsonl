@@ -1,0 +1,5 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/guides/architecture-overview.md", "reason": "跨端调用链路和响应格式约定"}
+{"file": ".trellis/spec/ai-store-api/backend/index.md", "reason": "ai后端规范"}
+{"file": ".trellis/spec/storehub-servless/backend/index.md", "reason": "中间件规范"}
+{"file": ".trellis/spec/storehub-uniapp/frontend/index.md", "reason": "小程序前端规范"}

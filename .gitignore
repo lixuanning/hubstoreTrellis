@@ -1,0 +1,18 @@
+# ===== 4 个公司业务代码仓库（禁止上传） =====
+/ai-store-api/
+/storehub-servless/
+/storehub-uniapp/
+/storehub-web/
+
+# ===== 敏感文件 =====
+.trae/mcp.json        # MCP 配置含 Token，不提交
+
+# ===== 系统 & 运行时 =====
+.DS_Store
+node_modules/
+*.log
+
+# ===== 环境变量 =====
+.env
+.env.local
+.env.*.local
