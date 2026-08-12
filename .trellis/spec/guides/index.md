@@ -157,6 +157,20 @@ Tasks are small and frequent — a single feature may span 5-10 tasks. Code-leve
 
 ---
 
+## Spec 维护方式
+
+spec 的维护有三条路径，最终用户决定是否保留：
+
+| 方式 | 触发 | 示例 |
+|------|------|------|
+| **① AI 主动扫描** | 新项目/新仓库初始化时 | AI 扫描代码提取已有规范 → 写入 spec |
+| **② AI 主动提议** 🆕 | 开发中 AI 觉得值得沉淀 | AI: "建议把这条写入 spec，要保留吗？" |
+| **③ 用户主动触发** | 用户说"加入 spec" | 规律性错误 → 一句话触发 → 立即固化 |
+
+**原则**：AI 不会默默写规则不告诉你，也不会漏掉有价值的经验。每次都经过你的确认。
+
+---
+
 ## Contributing
 
 Found a new "didn't think of that" moment? Add it to the relevant guide.
