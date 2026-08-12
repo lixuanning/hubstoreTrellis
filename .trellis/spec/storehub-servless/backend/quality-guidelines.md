@@ -30,6 +30,15 @@ Questions to answer:
 
 ## Required Patterns
 
+### 注释规范
+
+项目为中文团队协作，关键位置必须有中文注释：
+
+- **文件头注释**：说明文件职责和核心逻辑
+- **复杂业务逻辑**：非自解释的算法、状态机、条件分支必须注释说明意图
+- **接口/函数**：对外暴露的 public 方法需描述参数含义和返回值
+- **hooks / 中间件**：触发时机和副作用必须注释
+
 <!-- Patterns that must always be used -->
 
 (To be filled by the team)

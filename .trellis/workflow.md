@@ -652,6 +652,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 **Rules**:
 - No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
 - Never push to remote in this step.
+- **Commit ≠ Push**: commits default to local only. Push only when the user explicitly says "push" / "推送" / "推到远程". Do NOT push on "提交" / "提交一下" / "commit" alone.
 - If the user wants different message wording but accepts the file grouping, edit the message and re-confirm once — but if they reject the grouping, exit to manual mode.
 - The batched plan is one prompt; do not prompt per commit.
 

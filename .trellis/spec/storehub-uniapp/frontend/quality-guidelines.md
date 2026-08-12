@@ -30,6 +30,15 @@ Questions to answer:
 
 ## Required Patterns
 
+### 注释规范
+
+项目为中文团队协作，关键位置必须有中文注释：
+
+- **文件头注释**：说明组件/页面职责
+- **复杂业务逻辑**：非自解释的状态流转、条件判断必须注释说明意图
+- **Props / Emits**：组件对外接口需描述参数含义
+- **非直观样式**：奇怪的 rpx 值（如 110rpx TabBar 避让）必须注释原因
+
 <!-- Patterns that must always be used -->
 
 (To be filled by the team)
