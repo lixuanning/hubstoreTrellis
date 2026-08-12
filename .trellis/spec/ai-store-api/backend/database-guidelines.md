@@ -1,51 +1,38 @@
-# Database Guidelines
+# ai-store-api — 数据库指南
 
-> Database patterns and conventions for this project.
+## 技术栈
 
----
+TypeORM 0.2.25 + MySQL。`autoLoadEntities: true`，无需手动注册每个 Entity。
 
-## Overview
+## Entity 规范
 
-<!--
-Document your project's database conventions here.
+```typescript
+@Entity('warnings') // 表名 snake_case
+export class Warning {
+  @PrimaryGeneratedColumn() id: number;
+  @Column({ name: 'store_code' }) storeCode: string; // DB snake_case → TS camelCase
+  @CreateDateColumn({ name: 'create_time' }) createTime: Date;
+  @UpdateDateColumn({ name: 'update_time' }) updateTime: Date;
+  @OneToMany(() => WarningImage, wi => wi.warning) images: WarningImage[];
+  @ApiProperty() // Swagger 文档
+}
+```
 
-Questions to answer:
-- What ORM/query library do you use?
-- How are migrations managed?
-- What are the naming conventions for tables/columns?
-- How do you handle transactions?
--->
+## 查询方式（三种，按复杂度递进）
 
-(To be filled by the team)
+```typescript
+// 1. Repository API — 简单查询
+this.repo.find({ where: { storeCode, sent: 1 } });
+this.repo.findOne(id, { relations: ['images'] });
 
----
+// 2. QueryBuilder — 复杂查询（主流）
+getRepository(Warning).createQueryBuilder('warning')
+  .leftJoinAndSelect('warning.appeals', 'appeals')
+  .where('warning.status = :s', { s: Status.NEW })
+  .orderBy('warning.warning_status', 'ASC')
+  .offset((page - 1) * pageCount).limit(pageCount)
+  .getManyAndCount();
 
-## Query Patterns
-
-<!-- How should queries be written? Batch operations? -->
-
-(To be filled by the team)
-
----
-
-## Migrations
-
-<!-- How to create and run migrations -->
-
-(To be filled by the team)
-
----
-
-## Naming Conventions
-
-<!-- Table names, column names, index names -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Database-related mistakes your team has made -->
-
-(To be filled by the team)
+// 3. 原生 SQL — 极复杂场景
+this.repo.query(`SELECT ... FROM warnings LEFT JOIN ...`);
+```

@@ -1,51 +1,42 @@
-# State Management
+# storehub-uniapp — 状态管理
 
-> How state is managed in this project.
+## Pinia 两种写法并存
 
----
+### 写法 1：Setup Store（userInfoStore.ts）— 推荐
 
-## Overview
+```typescript
+export const useUserInfoStore = defineStore('userInfo', () => {
+  const loginStatus = ref<LOGIN_STATUS>(LOGIN_STATUS.IDLE);
+  const userInfo = ref<UserData>(defineUserInfo());
+  const userCurrentPostType = computed(() => { /* ... */ });
+  return { loginStatus, userInfo, userCurrentPostType };
+});
+```
 
-<!--
-Document your project's state management conventions here.
+组件中使用：
+```typescript
+const store = useUserInfoStore();
+const { userCurrentPostType } = storeToRefs(store);
+```
 
-Questions to answer:
-- What state management solution do you use?
-- How is local vs global state decided?
-- How do you handle server state?
-- What are the patterns for derived state?
--->
+### 写法 2：Options Store（homeStore.ts）
 
-(To be filled by the team)
+```typescript
+export const useHomeStore = defineStore('homeStore', {
+  state: () => ({ erpToken: '', storeCodes: [] }),
+  getters: { isStoreItemPage: () => { /* ... */ } },
+  actions: { setErpInfo(value) { this.erpToken = value; } },
+});
+```
 
----
+## 用户角色 Hook
 
-## State Categories
+`hooks/use-user-role.ts` 包装 Pinia store，在非组件上下文中使用：
 
-<!-- Local state, global state, server state, URL state -->
+```typescript
+const { userRoleInfo } = useUserRoleInfo(); // 可用在拦截器等非组件位置
+```
 
-(To be filled by the team)
+## 登录管理器
 
----
-
-## When to Use Global State
-
-<!-- Criteria for promoting state to global -->
-
-(To be filled by the team)
-
----
-
-## Server State
-
-<!-- How server data is cached and synchronized -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- State management mistakes your team has made -->
-
-(To be filled by the team)
+`utils/login/LoginManager.ts` — 队列 + 单例模式，确保多个并发登录请求只执行一次。

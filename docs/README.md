@@ -1,6 +1,6 @@
 # StoreHub 工程化文档
 
-> 这里是给**人**看的文档。AI 编码规范在 `.trellis/spec/`。
+> 这里是给**人**看的文档。AI 编码规范在 `.trellis/spec/`。 
 
 ---
 

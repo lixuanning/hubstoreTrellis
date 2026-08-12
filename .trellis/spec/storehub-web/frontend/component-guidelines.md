@@ -1,59 +1,34 @@
-# Component Guidelines
+# storehub-web — 组件指南
 
-> How components are built in this project.
+## 规范
 
----
+- `<script setup lang="ts">` + `<style lang="less" scoped>` 标准 Vue 3 SFC
+- 样式使用 Less + scoped
 
-## Overview
+## 组件模式
 
-<!--
-Document your project's component conventions here.
+```vue
+<script setup lang="ts">
+import store from '@/store/userInfoStore'; // 直接导入对象（非 defineStore 写法）
+import { usedailyClearingInfoStore } from '@/store/dailyClearing'; // defineStore 写法
 
-Questions to answer:
-- What component patterns do you use?
-- How are props defined?
-- How do you handle composition?
-- What accessibility standards apply?
--->
+const { userCurrentRole } = store; // 直接解构
+const { $store, fetchData } = usedailyClearingInfoStore();
+</script>
+```
 
-(To be filled by the team)
+## 样式约定
 
----
+- **BEM 命名**：`&__element` / `&--modifier`
+- **Scoped**：`<style lang="less" scoped>`
+- **Vant + PagodaMobile**：自动导入（unplugin），直接用不需要 import
+- **双端适配**：postcss-px-to-viewport-8-plugin 双 viewport 配置
+  - Vant/PagodaMobile 库组件：375 设计稿
+  - src/ 业务代码：750 设计稿
+  - PC 页面（`universal/` 路径）：`selectorBlackList: ['pc', 'universal']` 不转换 px
 
-## Component Structure
+## 新增组件时
 
-<!-- Standard structure of a component file -->
-
-(To be filled by the team)
-
----
-
-## Props Conventions
-
-<!-- How props should be defined and typed -->
-
-(To be filled by the team)
-
----
-
-## Styling Patterns
-
-<!-- How styles are applied (CSS modules, styled-components, Tailwind, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Accessibility
-
-<!-- A11y requirements and patterns -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Component-related mistakes your team has made -->
-
-(To be filled by the team)
+1. 放对应 `views/<模块>/components/` 下
+2. 使用 `<script setup>`
+3. 导入 store 而非自己重写

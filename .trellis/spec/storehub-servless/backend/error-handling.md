@@ -1,51 +1,55 @@
-# Error Handling
+# storehub-servless — 错误处理
 
-> How errors are handled in this project.
+## 全局错误处理（setup.ts errorHandle）
 
----
+三种异常类型 → 三种响应：
 
-## Overview
+```typescript
+// 1. ApiBusinessException — 业务异常
+res.json({
+  code: e.code,              // 业务错误码
+  message: e.message,        // 错误描述
+  error: { api, origin, debugInfo }
+});
 
-<!--
-Document your project's error handling conventions here.
+// 2. ServiceException — 下游服务异常
+res.json({
+  code: e.httpStatusCode,    // HTTP 状态码
+  message: '服务异常, ...',
+  error: { api, origin, message: e.message }
+});
 
-Questions to answer:
-- What error types do you define?
-- How are errors propagated?
-- How are errors logged?
-- How are errors returned to clients?
--->
+// 3. 未知异常
+res.json({
+  code: 500,
+  message: '服务异常, ...',
+  error: { api, origin, message: e.origin }
+});
 
-(To be filled by the team)
+// 所有分支都调用 slrLog.error(e) 记录
+```
 
----
+## 下游响应拦截器异常（api/util.ts）
 
-## Error Types
+```typescript
+// 下游返回非成功码 → ApiBusinessException
+new ApiBusinessException({
+  code: result[resCodeKey],
+  message: result[resMessageKey],
+  origin: `${desc}：${config.url}`,
+});
 
-<!-- Custom error classes/types -->
+// 网络异常/HTTP 错误 → ServiceException
+new ServiceException({
+  message: error.message,
+  origin: `${desc}：${config.url}`,
+});
+```
 
-(To be filled by the team)
+## 登录失效
 
----
+返回 `code: -9999, message: '登录失效，请重新登录'`，由前端拦截器处理。
 
-## Error Handling Patterns
+## 调试信息保护
 
-<!-- Try-catch patterns, error propagation -->
-
-(To be filled by the team)
-
----
-
-## API Error Responses
-
-<!-- Standard error response format -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Error handling mistakes your team has made -->
-
-(To be filled by the team)
+非生产环境（`RUNTIME_ENV !== 'exc'`）才附加 `__debugInfo`（含下游 URL、请求参数等）。
