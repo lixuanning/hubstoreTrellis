@@ -2,7 +2,7 @@
 
 ## getUserInfo 后端数据结构
 
-> 此接口为 uniapp 和 web 共用，返回的 JSON 结构见 [data.txt](data.txt)
+> 此接口为 uniapp 和 web 共用。以下结构由真实接口返回数据提炼而来。
 
 ```typescript
 // 后端原始返回 (GET /user/getUserInfo)
