@@ -1,0 +1,33 @@
+# 提示词自动验证 Skill 配置
+# 实际调用走 storehub-servless 代理（带鉴权头），不是 ai-store-api 原生
+
+# base_url：测试环境 servless 网关
+base_url: https://storehub-servless.bgms.tencent-test.pagoda.com.cn/aiRecognition
+
+# 默认模型
+model: qwen3-vl-plus
+
+# 达标线：准确率 >= 该值视为通过
+accuracy_threshold: 0.90
+
+# 首轮样本量 / 复验样本量（**网关 60s 限制**）
+first_batch: 10
+second_batch: 30
+
+# 跑数分批大小（避免 503 响应超时）
+batch_size: 15
+
+# 低准确率迭代上限
+max_iterations: 3
+
+# 鉴权头（**必须从浏览器复制**，2h 内有效，过期要重新拿）
+auth:
+  is-new-sma-view: "true"
+  x-position-type: jt-test
+  x-client-platform: h5
+  x-client-ajax: "1"
+  x-qwmp-token: 2c23130c676d7ab9cd00e2497e0ae2be7a29b143b8aa71099a26635bc142a57a
+  Cache-Control: no-Cache
+  Referer: https://storehub-web.fea-static.tencent-test.pagoda.com.cn/
+  User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36
+  Accept: application/json, text/plain, */*
