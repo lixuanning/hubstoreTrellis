@@ -917,14 +917,19 @@ Context loaded. Follow <task-status>. Load workflow/spec/task details only when 
 
     context_text = output.getvalue()
 
-    # Kiro (CLI trellis agent agentSpawn) adds a hook's stdout directly to the
-    # conversation context — no JSON envelope. Emit the bare overview text.
-    # Conditionally isolated: all other platforms keep the JSON path below.
-    if _detect_platform(hook_input) == "kiro":
+    # Trae IDE: stdout JSON `hookSpecificOutput.additionalContext` is silently
+    # dropped by the harness (verified 2026-09: hook completes, log says
+    # "merged successfully", but the model never sees the context — same
+    # silent-positive class Cursor confirmed for sessionStart). For
+    # SessionStart and UserPromptSubmit, plain-text stdout is the documented
+    # fallback that Trae adds directly to the model context, so for the
+    # `trae` platform we print the bare overview text instead of the JSON
+    # envelope. Kiro keeps its existing plain-text branch unchanged.
+    platform = _detect_platform(hook_input)
+    if platform in ("kiro", "trae"):
         print(context_text, flush=True)
         return
 
-    platform = _detect_platform(hook_input)
     result: dict[str, object] = {
         # Claude Code / Qoder / CodeBuddy / Droid / Gemini / Copilot / Trae /
         # ZCode format.

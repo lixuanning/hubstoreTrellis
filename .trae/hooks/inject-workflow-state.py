@@ -446,11 +446,15 @@ def main() -> int:
         parts.append(breadcrumb)
         breadcrumb = "\n\n".join(parts)
 
-    # Kiro (CLI userPromptSubmit / IDE promptSubmit) adds a hook's stdout
-    # directly to the conversation context — no JSON envelope. Emit the bare
-    # breadcrumb text. Conditionally isolated: all other platforms keep the
-    # hookSpecificOutput JSON path below unchanged.
-    if platform == "kiro":
+    # Trae IDE: stdout JSON `hookSpecificOutput.additionalContext` is silently
+    # dropped by the harness (verified 2026-09: hook completes, log says
+    # "merged successfully", but the model never sees the context — same
+    # silent-positive class Cursor confirmed for sessionStart). For
+    # SessionStart and UserPromptSubmit, plain-text stdout is the documented
+    # fallback that Trae adds directly to the model context, so for the
+    # `trae` platform we print the bare breadcrumb instead of the JSON
+    # envelope. Kiro keeps its existing plain-text branch unchanged.
+    if platform in ("kiro", "trae"):
         print(breadcrumb)
         return 0
 
