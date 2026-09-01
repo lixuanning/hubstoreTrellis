@@ -35,31 +35,46 @@ cleanup() {
 }
 trap cleanup INT TERM
 
-# 服务元数据：name|logfile|default_port|ready_regex|port_regex
-# 端口默认值用于兜底；port_regex 用于从日志中提取真实端口（如 vite 动态分配）
+# 获取本机 LAN IP（用于拼 network URL）
+# macOS: ipconfig getifaddr en0；Linux: hostname -I
+LAN_IP=""
+get_lan_ip() {
+  if command -v ipconfig >/dev/null 2>&1; then
+    ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null
+  else
+    hostname -I 2>/dev/null | awk '{print $1}'
+  fi
+}
+
+# 服务元数据：name|logfile|default_port|ready_regex|port_re
+# port_re 既要能匹配 Local 行也要能匹配 Network 行（vite 两种都会打）
 SERVICES=(
   "ai-store-api|ai-store.log|3000|successfully started|:3000"
   "serverless|sl.log|3001|listening on port|3001"
-  "uniapp|uniapp.log|5173|VITE.*ready in|Local:.*:([0-9]+)"
-  "storehub-web|web.log|5174|VITE.*ready in|Local:.*:([0-9]+)"
+  "uniapp|uniapp.log|5173|VITE.*ready in|Local:.*:([0-9]+)|Network:.*://([^/]+):([0-9]+)"
+  "storehub-web|web.log|5174|VITE.*ready in|Local:.*:([0-9]+)|Network:.*://([^/]+):([0-9]+)"
 )
 
 # 初始化 state 文件
 for svc in "${SERVICES[@]}"; do
-  IFS='|' read -r name _ def_port _ _ <<< "$svc"
+  IFS='|' read -r name _ def_port _ _ _ <<< "$svc"
+  LAN_IP="$(get_lan_ip)"
   cat > "$STATE_DIR/$name" <<EOF
 name=$name
 port=$def_port
+local_url=http://localhost:$def_port
+network_url=http://$LAN_IP:$def_port
 ready=false
 EOF
 done
 
 write_addr_file() {
   local first=true
+  LAN_IP="$(get_lan_ip)"
   {
-    printf '{"updatedAt":"%s","services":{' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '{"updatedAt":"%s","lanIp":"%s","services":{' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$LAN_IP"
     for svc in "${SERVICES[@]}"; do
-      IFS='|' read -r name _ _ _ _ <<< "$svc"
+      IFS='|' read -r name _ _ _ _ _ <<< "$svc"
       source "$STATE_DIR/$name"
       local ready_lc="$ready"
       if [ "$first" = true ]; then
@@ -67,28 +82,30 @@ write_addr_file() {
       else
         printf ','
       fi
-      printf '"%s":{"url":"http://localhost:%s","port":%s,"ready":%s}' \
-        "$name" "$port" "$port" "$ready_lc"
+      printf '"%s":{"localUrl":"http://localhost:%s","networkUrl":"%s","port":%s,"ready":%s}' \
+        "$name" "$port" "$network_url" "$port" "$ready_lc"
     done
     printf '}}'
   } > "$ADDR_FILE"
 }
 
 print_summary() {
+  local lan_ip
+  lan_ip="$(get_lan_ip)"
   echo
   echo "────────────────────────────────────────────"
-  echo "✅ 全部服务就绪"
-  echo "┌────────────────┬──────────────────────────┐"
-  echo "│ Service        │ URL                      │"
-  echo "├────────────────┼──────────────────────────┤"
+  echo "✅ 全部服务就绪（LAN IP: $lan_ip）"
+  echo "┌────────────────┬───────────────────────────┬─────────────────────────────┐"
+  echo "│ Service        │ Local                     │ Network                     │"
+  echo "├────────────────┼───────────────────────────┼─────────────────────────────┤"
   for svc in "${SERVICES[@]}"; do
-    IFS='|' read -r name _ _ _ _ <<< "$svc"
+    IFS='|' read -r name _ _ _ _ _ <<< "$svc"
     source "$STATE_DIR/$name"
-    printf "│ %-14s │ %-24s │\n" "$name" "http://localhost:$port"
+    printf "│ %-14s │ %-25s │ %-27s │\n" "$name" "http://localhost:$port" "$network_url"
   done
-  echo "└────────────────┴──────────────────────────┘"
+  echo "└────────────────┴───────────────────────────┴─────────────────────────────┘"
   echo "📋 地址文件：$ADDR_FILE"
-  echo "   读取方式：cat $ADDR_FILE | jq ."
+  echo "   读取方式：cat $ADDR_FILE | jq .services.uniapp.networkUrl"
   echo "────────────────────────────────────────────"
 }
 
@@ -130,13 +147,24 @@ run_with_prefix() {
           if [ -n "$extracted" ]; then
             port="$extracted"
           fi
+          # vite 日志里同时有 Local 和 Network 两行，重新生成更精准的 URL
+          local net_url
+          net_url=$(grep -Eo 'Network:[[:space:]]+http://[^[:space:]]+' "$LOG_DIR/$log" 2>/dev/null | tail -1 | sed 's/^Network:[[:space:]]*//' | sed 's:/*$::')
+          if [ -n "$net_url" ]; then
+            network_url="$net_url"
+          else
+            network_url="http://$LAN_IP:$port"
+          fi
+          local_url="http://localhost:$port"
           ready="true"
           cat > "$STATE_DIR/$name" <<EOF
 name=$name
 port=$port
+local_url=$local_url
+network_url=$network_url
 ready=$ready
 EOF
-          echo "  ✓ $name ready on port $port"
+          echo "  ✓ $name ready ($local_url / $network_url)"
         fi
       fi
 
