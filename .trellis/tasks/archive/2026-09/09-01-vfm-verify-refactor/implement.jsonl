@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/ai-store-api/backend/index.md", "reason": "后端通用规范：Response 归一化约定、Controller 注解、Module 结构、curl 自检"}
+{"file": ".trellis/spec/ai-store-api/backend/database-guidelines.md", "reason": "TypeORM 实体/查询规范，sample/result 实体已遵循此模式"}
+{"file": "src/ai-recognition/vfm-verify/vfm-verify.service.ts", "reason": "当前实现，重构目标文件：抽 runReviewPipeline + saveResultEntity、改默认模型、pipeline 新方法"}
+{"file": "src/ai-recognition/vfm-verify/vfm-verify.controller.ts", "reason": "新增 POST /vfm-verify/pipeline 端点"}
+{"file": "src/ai-recognition/vfm-sample/vfm-sample.service.ts", "reason": "createOrUpdate 已是现成的 sample upsert 实现，pipeline 直接复用"}
+{"file": "src/ai-recognition/vfm-verify/vfm-verify.module.ts", "reason": "需要 import VfmSampleModule 以注入 VfmSampleService"}
