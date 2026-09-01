@@ -127,35 +127,44 @@ run_with_prefix() {
 }
 
 # Watcher: 周期性扫描日志，更新 state
-(
+# 注意：必须用 function 而不是 ( ... ) & 子 shell，
+#       zsh 在子 shell 中用 `local VAR; VAR=value` 会把赋值打到 stdout
+watcher() {
   local TIMEOUT=30
   local START
   START=$(date +%s)
   local printed_summary=false
+  local lan_ip="$(get_lan_ip)"
 
   while true; do
     local all_ready=true
     for svc in "${SERVICES[@]}"; do
-      IFS='|' read -r name log def_port ready_re port_re <<< "$svc"
+      # zsh 数组切分（避免 background 函数中 `IFS='|' read ... <<<` 触发赋值打印 bug）
+      local parts=("${(@s:|:)svc}")
+      local name=$parts[1]
+      local log=$parts[2]
+      local def_port=$parts[3]
+      local ready_re=$parts[4]
+      local port_re=$parts[5]
       source "$STATE_DIR/$name"
 
       if [ "$ready" != "true" ] && [ -f "$LOG_DIR/$log" ]; then
         if grep -Eq "$ready_re" "$LOG_DIR/$log" 2>/dev/null; then
           # 提取纯数字端口（先按 port_re 匹配整段，再抓末尾数字）
-          local extracted
-          extracted=$(grep -Eo "$port_re" "$LOG_DIR/$log" 2>/dev/null | tail -1 | grep -oE '[0-9]+$' | head -1)
+          # 注意：必须用 `local VAR=$(...)` 合并写法，避免 zsh 在 background 函数 + 循环中
+          #       将 `local VAR; VAR=value` 的赋值打到 stdout
+          local extracted=$(grep -Eo "$port_re" "$LOG_DIR/$log" 2>/dev/null | tail -1 | grep -oE '[0-9]+$' | head -1)
           if [ -n "$extracted" ]; then
             port="$extracted"
           fi
           # vite 日志里同时有 Local 和 Network 两行，重新生成更精准的 URL
-          local net_url
-          net_url=$(grep -Eo 'Network:[[:space:]]+http://[^[:space:]]+' "$LOG_DIR/$log" 2>/dev/null | tail -1 | sed 's/^Network:[[:space:]]*//' | sed 's:/*$::')
+          local net_url=$(grep -Eo 'Network:[[:space:]]+http://[^[:space:]]+' "$LOG_DIR/$log" 2>/dev/null | tail -1 | sed 's/^Network:[[:space:]]*//' | sed 's:/*$::')
           if [ -n "$net_url" ]; then
             network_url="$net_url"
           else
-            network_url="http://$LAN_IP:$port"
+            network_url="http://$lan_ip:$port"
           fi
-          local_url="http://localhost:$port"
+          local local_url="http://localhost:$port"
           ready="true"
           cat > "$STATE_DIR/$name" <<EOF
 name=$name
@@ -182,8 +191,7 @@ EOF
       # watcher 继续运行保持 addr 文件最新；只打印一次
     fi
 
-    local NOW
-    NOW=$(date +%s)
+    local NOW=$(date +%s)
     local ELAPSED=$((NOW - START))
     if [ "$ELAPSED" -gt "$TIMEOUT" ] && [ "$printed_summary" = "false" ]; then
       echo
@@ -195,7 +203,8 @@ EOF
 
     sleep 1
   done
-) &
+}
+watcher &
 watcher_pid=$!
 
 # 启动横幅
