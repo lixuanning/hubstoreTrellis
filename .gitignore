@@ -11,6 +11,9 @@
 .DS_Store
 node_modules/
 *.log
+.dev-logs/
+.dev-state/
+.dev-addresses.json
 
 # ===== 环境变量 =====
 .env
