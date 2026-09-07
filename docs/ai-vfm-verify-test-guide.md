@@ -8,23 +8,21 @@
 
 ## 0. 上线前运维事项（**必做**）
 
-新环境 / 老环境都必须执行 SQL：
+执行**一份合并 SQL**（2026-09-02 上线审核版，**仅含 DDL/DML，无验证**）：
 
-- 文件：[`ai-store-api/src/ai-recognition/sql/2025-07-25-create-vfm-tags.sql`](file:///Users/lidie/a-code/a-pgy/storehub/ai-store-api/src/ai-recognition/sql/2025-07-25-create-vfm-tags.sql)
-- 新环境：建表 + 初始化 2 个系统标签
-- 老环境（vfm_tags 已存在无 is_system）：**先打开 ALTER 注释执行**，再执行 INSERT
+- 文件：[`ai-store-api/src/ai-recognition/sql/2026-09-02-prod-release-all-in-one.sql`](file:///Users/lidie/a-code/a-pgy/storehub/ai-store-api/src/ai-recognition/sql/2026-09-02-prod-release-all-in-one.sql)
+- 内含 2 个 Section：
+  - **Section 1** 建表（3 张新表：`check_items` / `review_prompts` / `vfm_tags`，含 check_items 14 条种子 + vfm_tags 3 条系统标签**网络错误 / 解析失败 / 回调失败**）
+  - **Section 2** vfm_debug_result ALTER 增量（`prompt_id` / `prompt_name` / `ix_prompt_id` / `tag_ids`）—— `INFORMATION_SCHEMA` 幂等判断，5.7/8.0 兼容
+- **本次新增字段 `invert_result`**（在 check_items 表上）：AI 复核结果反转开关（1=反转，0=不反转）。用途：部分检查项的"是否违规"语义与 LLM 的 isValid **方向相反**（如 `122 开切未佩戴手套`：LLM isValid=true=已戴=合规，业务 vfm_check_result 期望 2=否/不预警）。**本次默认 3 项开启反转：`35 开切未佩戴口罩` / `70 工装不标准` / `122 开切未佩戴手套`**。反转逻辑在 [vfm-verify.service.ts](file:///Users/lidie/a-code/a-pgy/storehub/ai-store-api/src/ai-recognition/vfm-verify/vfm-verify.service.ts) `resolveInvert()` 工具方法，**只动入库字段 `vfm_check_result` 和回调 `content.isValid`**，LLM 原始 `verifyResult.isValid` 保持不动（用于 reason / 异常排查）。映射规则：`invert_result=1` 时 `vfm_check_result = isValid ? 2 : 1`（同时 `isValidForCallback = !isValid`），`invert_result=0` 时按原映射。LLM 异常结果（`isValid=undefined` 或 `errorType` 非空）不反转。
 
-执行后确认：
-```sql
-SELECT id, name, is_system FROM vfm_tags WHERE deleted = 0;
--- 期望至少 2 条：网络错误 (is_system=1)、解析失败 (is_system=1)
-```
+执行策略：
+- **生产环境**：执行 Section 1 + 2；老环境 check_items 已有则 1.1 自动跳过；新表不存在则 1.2/1.3 直接建
+- **全新环境**：sample/result 需自行从 [db.txt](file:///Users/lidie/a-code/a-pgy/storehub/ai-store-api/src/ai-recognition/db.txt) 补齐后，再执行 Section 1 + 2
 
-启动服务后日志中应看到：
-```
-[seed] 创建系统标签: name=网络错误
-[seed] 创建系统标签: name=解析失败
-```
+**上线后验证**（**不在运维上线审核范围**，由查询平台同事执行）：
+- 文件：[`ai-store-api/src/ai-recognition/sql/2026-09-02-prod-release-verify.sql`](file:///Users/lidie/a-code/a-pgy/storehub/ai-store-api/src/ai-recognition/sql/2026-09-02-prod-release-verify.sql)
+- 验证项：vfm_debug_result 字段/索引 + vfm_tags 系统标签 + 系统标签命中数
 
 ---
 
@@ -299,9 +297,40 @@ curl -X POST http://localhost:3000/vfm-verify/pipeline \
 
 ---
 
+## 6.5 Web 生产环境隐藏 AI 复核按钮
+
+**目的**：避免生产环境误触发 AI 复核接口（节省成本 + 防止污染线上数据）。**不动路由**，仅在组件层把 AI 复核相关按钮隐藏，页面其他功能（数据查询、审核记录、提示词管理、标签管理）正常可用。
+
+### 6.5.1 改动点
+
+- [ArtificialReview.vue](file:///Users/lidie/a-code/a-pgy/storehub/storehub-web/src/views/universal/aiRecognition/ArtificialReview.vue)
+  - script 加 `const isProduction = import.meta.env.VITE_APP_ENV === 'production'`
+  - 模板 `ai-review-section` 加 `v-if="hasValidReviewItems && !isProduction"`（覆盖提示词下拉、模型下拉、"AI复核"按钮）
+- [ModelDebug.vue](file:///Users/lidie/a-code/a-pgy/storehub/storehub-web/src/views/universal/aiRecognition/ModelDebug.vue)
+  - script 加 `const isProduction = import.meta.env.VITE_APP_ENV === 'production'`
+  - 模板 `ai-review-section` 加 `v-if="!isProduction"`（覆盖"AI复核"按钮）
+
+> 路由层未做拦截，生产环境仍可进入 `/universal/ai-recognition`，只隐藏 AI 复核按钮。模型调试、复核记录查看、提示词管理、标签管理不受影响。
+
+### 6.5.2 验证步骤
+
+| 编号 | 检查项 | 期望 |
+|---|---|---|
+| W1 | dev 环境（`VITE_APP_ENV=development`）打开 `/universal/ai-recognition` | 4 个 tab 正常显示，AI 复核按钮可见可用 |
+| W2 | test / staging 环境同上 | 正常显示，AI 复核可用 |
+| W3 | production 环境打开 `/universal/ai-recognition` | 4 个 tab 正常显示，**AI 复核按钮不可见**；其他功能（查询/审核/提示词/标签）正常使用 |
+
+> 提示：项目 4 个环境文件 [.env.development / .env.test / .env.staging / .env.production](file:///Users/lidie/a-code/a-pgy/storehub/storehub-web/) 都已设置 `VITE_APP_ENV`，按部署时 `yarn build --mode xxx` 注入。
+
+---
+
 ## 7. 已知小问题 / 后续 TODO
 
-1. **callbackUrl 暂未实现真实回调发送**：pipeline / pipeline-batch 走完只会日志 `TODO: callback`，不会 HTTP POST 给对接方。等对方给地址再加。
+1. **callbackUrl 已实现真实 HTTP POST**：pipeline-batch 异步完成后，按对方接口协议（result / uniqueId / tokens / content）POST 到 `batchCallbackUrl`。
+   - 优先级：`dto.callbackUrl` > `batchCallbackUrl` > `STORE_BASE_URL + /dm-store/ai/check/callback`（沿用 rbac.service 同源配置）
+   - 10s 超时，失败仅记日志不影响主流程
+   - **回调失败会自动给 vfm_result 打 "回调失败" 系统标签**（方便查询补发）
+   - **单条 `/vfm-verify/pipeline` 不触发**
 2. **本地模型 `qwen3-vl-4b-local` 不走 json_schema**：本地服务按原 markdown 围栏解析。
 3. **pipeline 同步超时风险**：`/vfm-verify/pipeline` 单条同步，长时间跑（>30s）可能被前端超时。如有大批量单条调用需求，改用 `/vfm-verify/pipeline-batch`。
 
