@@ -247,3 +247,78 @@
 >
 > 如果 OK，请回复"确认"或"开始 A"，我就创建子任务 A 并启动 `trellis-implement`。
 > 如需调整，直接说哪一节要改。
+
+---
+
+## 8. 实施记录（2026-09-10）
+
+### 8.1 实际执行路径
+
+**Trellis channel 在本机不可用**：`trellis channel spawn --agent implement` 失败 `spawn claude ENOENT`（本机未安装 `claude` CLI，也没有 `codex`）。
+
+**回退方案**：直接通过主会话的 `general-purpose` 子代理（Task 工具）派发实现任务，跳过 channel 运行时。该子代理读 `prd.md` / `design.md` / `implement.md` + 源 wd-calendar-v2 规格 + 源代码，自主完成实现。
+
+> 后续要恢复完整 Trellis channel 流程，需要先安装 `@anthropic-ai/claude-code` 或 `codex` CLI，并在沙箱白名单放开 `/Users/lidie/.trellis/`。
+
+### 8.2 已交付文件（`storehub-web/src/components/calendar-v2/`）
+
+| 文件 | 行数 | 角色 |
+|---|---|---|
+| `index.vue` | 1468 | 主入口：tab 切换 + 头部/底部 + 子组件事件聚合 + 对外 emits |
+| `types.ts` | 324 | `TimeAllData` / `TabConfig` / 5 tab 内部类型 |
+| `utils.ts` | 627 | `getDefaultTimeAllData()` / `formatValue()` / 业务周 / 月初月末 / 节日映射 |
+| `constants.ts` | 83 | Tab 顺序 / 默认 type / 默认时间边界 |
+| `styles/shared.scss` | 289 | 5 tab 共用 token + 弹层壳 |
+| `components/DateTab.vue` | 139 | 日（单选 + 范围） |
+| `components/WeekTab.vue` | 160 | 周（业务周 + 反向索引） |
+| `components/MonthTab.vue` | 105 | 月 |
+| `components/FestivalTab.vue` | 229 | 节日（3 picker + 翻年） |
+| `components/CustomTab.vue` | 199 | 自定义（4 元素协议） |
+| **合计** | **3623** | — |
+
+### 8.3 用户 5 条硬要求验收
+
+| # | 要求 | 状态 |
+|---|---|---|
+| 1 | 零 hook | ✅ `find -name "use*.ts"` → 空 |
+| 2 | `timeAllData` 单一数据源，格式与旧 modelValue 一致 | ✅ index.vue 22 处 / types.ts 6 处引用 |
+| 3 | `tabConfig` 控制可见 tab | ✅ 已实现，默认全开 |
+| 4 | 5 tab 组件 + 主入口 | ✅ DateTab / WeekTab / MonthTab / FestivalTab / CustomTab |
+| 5 | 布局沿用 / vant 替换 | ✅ `van-calendar` + `van-picker` + `van-action-sheet` |
+
+### 8.4 验证结果
+
+```bash
+# TypeScript
+npx vue-tsc --noEmit -p tsconfig.app.json | grep "calendar-v2"
+# → 无输出（0 错误）
+
+# ESLint
+npx eslint src/components/calendar-v2/
+# → 无输出（0 错误 / 0 警告）
+```
+
+### 8.5 不在本次范围内（需单独决策）
+
+`storehub-web/src/views/homeDetails/govEntSales/index.vue` 仍引用旧大写路径：
+
+```ts
+import CalendarV2 from '@/components/CalendarV2/CalendarV2.vue'           // ❌ 找不到
+import MonthOnMonth from '@/components/CalendarV2/components/MonthOnMonth.vue'  // ❌ 找不到
+import WeekAlign from '@/components/CalendarV2/components/WeekAlign.vue'  // ❌ 找不到
+import { useCalendarV2 } from '@/components/CalendarV2/useCalendarV2'   // ❌ 找不到
+import type { ... } from '@/components/CalendarV2/types'                // ❌ 找不到
+```
+
+共 **18 个预存 type 错误**（与本次重构无关，文件早已 break）。两种处理方案：
+
+1. **业务侧迁移**（推荐）：改 `govEntSales/index.vue` 的 import 路径 → `@/components/calendar-v2`，配合新 props `timeAllData` / `tabConfig`。需要业务方投入。
+2. **新增兼容垫片**：在 `@/components/CalendarV2/` 路径下重新挂"re-export 入口"，仅供过渡期使用。
+
+按用户"不动业务代码"约束，**暂留待业务方确认**。
+
+### 8.6 后续步骤
+
+1. 业务方（govEntSales / home/data-dashboard 等）按新 API 迁移
+2. 父任务 archive
+3. 业务方接入完成后，单独建子任务"calendar-v2 业务接入"做端到端验证
