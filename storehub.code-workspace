@@ -1,0 +1,98 @@
+{
+  "folders": [
+    {
+      "name": "ai-store-api",
+      "path": "./ai-store-api"
+    },
+    {
+      "name": "storehub-servless",
+      "path": "./storehub-servless"
+    },
+    {
+      "name": "storehub-uniapp",
+      "path": "./storehub-uniapp"
+    },
+    {
+      "name": "storehub-web",
+      "path": "./storehub-web"
+    }
+  ],
+  "settings": {
+    // ----- 公共 TS 行为 -----
+    // 让每个子仓用自己 node_modules 里的 TS，避免 IDE 拉到全局 TS 找不到类型
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    // ESLint 保存时只修不报的"潜在"问题，避免自动格式化覆盖业务代码
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "never"
+    },
+    "editor.formatOnSave": false,
+    // ----- 按语言指定默认格式化器（与各子仓 .vscode/settings.json 一致） -----
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[vue]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[scss]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[less]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // ----- 文件关联：保证 .vue 被 Volar 接管 -----
+    "files.associations": {
+      "*.vue": "vue"
+    },
+    // ----- Vue 3 + TS 单文件组件编译目标 -----
+    "vue.compilerOptions.target": 3.5,
+    // ----- Git 行为 -----
+    "git.enableSmartCommit": false,
+    "git.postCommitCommand": "none",
+    "git.confirmSync": false,
+    // ----- 不在根级扫 .trellis / docs / .dev-* 这些非业务目录，省 TS Server 索引资源 -----
+    "files.watcherExclude": {
+      "**/.trellis/**": true,
+      "**/.trae/**": true,
+      "**/.dev-logs/**": true,
+      "**/.dev-state/**": true,
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/build/**": true
+    },
+    "search.exclude": {
+      "**/.trellis/**": true,
+      "**/.trae/**": true,
+      "**/.dev-logs/**": true,
+      "**/node_modules/**": true,
+      "**/dist/**": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "Vue.volar",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint"
+    ],
+    "unwantedRecommendations": [
+      "octref.vetur"
+    ]
+  },
+  "launch": {
+    "configurations": [],
+    "compounds": []
+  }
+}
