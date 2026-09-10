@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/storehub-web/frontend/quality-guidelines.md", "reason": "代码质量规范：禁止模式、必填模式（中文注释）、测试要求、Code Review 清单"}
+{"file": ".trellis/spec/storehub-web/frontend/component-guidelines.md", "reason": "Vant 组件导入与样式规范（check 阶段用于规范一致性审查）"}
+{"file": ".trellis/spec/storehub-web/frontend/type-safety.md", "reason": "TS strictness：no any 审查点"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "识别重复模式，避免重复造轮子（check 时用于发现重复）"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "跨层思考：CalendarV2 跨 api/components/views 时数据流审查"}

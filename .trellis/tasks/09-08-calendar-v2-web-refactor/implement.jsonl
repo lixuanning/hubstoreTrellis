@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/storehub-web/frontend/index.md", "reason": "storehub-web frontend overview: Vue 3 + Vite + Vant, 2-tier API pattern, webview integration"}
+{"file": ".trellis/spec/storehub-web/frontend/component-guidelines.md", "reason": "Vant + Less + BEM + scoped patterns; viewport 750 业务代码 / 375 Vant; defineStore/store import 规范"}
+{"file": ".trellis/spec/storehub-web/frontend/hook-guidelines.md", "reason": "custom hooks 规范（useCalendar/useCalendarTab/useCalendarWeeks）"}
+{"file": ".trellis/spec/storehub-web/frontend/type-safety.md", "reason": "TypeScript strictness; 禁用 any；unknown + 类型守卫；CalendarModelValue 等"}
+{"file": ".trellis/spec/guides/architecture-overview.md", "reason": "跨包架构与调用链路（4 仓库、webview 嵌入、cookie 登录）"}
