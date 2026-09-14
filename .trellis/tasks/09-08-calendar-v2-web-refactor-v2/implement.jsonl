@@ -1,0 +1,5 @@
+{"todos":[
+  "改写 index.vue: 用 van-tabs 替代手画 button · 用 van-button block 加确认按钮 · 修正弹层结构（header/body/footer） · emit timeAllData 业务字符串",
+  "修 utils.ts 增加 stringifyTimeAllData 函数（剔除时间戳）",
+  "检查 DateTab/WeekTab/MonthTab/FestivalTab/CustomTab 5 个子组件 prop 接入"
+]}

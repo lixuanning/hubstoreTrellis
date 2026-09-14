@@ -1,0 +1,103 @@
+{
+  "todos": [
+    {
+      "id": "1",
+      "title": "精读原 wd-calendar-v2 / use-calendar.ts 全部业务逻辑",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T18:00:00+08:00",
+      "completedAt": "2026-09-10T18:20:00+08:00",
+      "notes": "通读了 storehub-uniapp 原组件的 types.ts / utils / use-calendar / use-calendar-tab / 接入 home-data-dashboard。明确 5 tab 业务细节：date 选日、week 选日自动算 YYYY-WW、month 选月 YYYY-MM、festival 3 picker + 翻年、custom 4 元素协议 + 子 Tab。"
+    },
+    {
+      "id": "2",
+      "title": "5 个日历子组件用 van-calendar / van-picker 重写",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T18:20:00+08:00",
+      "completedAt": "2026-09-10T19:00:00+08:00",
+      "notes": "toVanDate() 把任意业务值（timestamp/YYYY-MM-DD/YYYY-MM/YYYY-WW）转 Date|[] 给 van-calendar；confirm 时 toBusinessString() 转回业务字符串输出。老组件内部 emit 链 1:1 对应：wd-calendar-view.select -> handleVantSelect -> emit update:modelValue + confirm + select。"
+    },
+    {
+      "id": "3",
+      "title": "index.vue 新增 fillDefaultForEmptyTabs() 解决 confirm 按钮禁用",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T19:00:00+08:00",
+      "completedAt": "2026-09-10T19:10:00+08:00",
+      "notes": "对应老组件 defineCalendarValue() 在 modelValue 缺省时给每个 tab 提供默认值。flattenValue 过滤器的 NaN 修复：字符串业务值保留，只过滤数字 NaN（utils.ts:78-91）。"
+    },
+    {
+      "id": "4",
+      "title": "新增 MonthOnMonth 业务子组件",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T19:10:00+08:00",
+      "completedAt": "2026-09-10T19:25:00+08:00",
+      "notes": "对应老组件 pages-home/components/calendar-v2/month-on-month.vue 388 行。业务逻辑 1:1：日同比 1 年/环比 7 天、月同比 1 年/环比 1 月、周同比业务周对齐可开关。"
+    },
+    {
+      "id": "5",
+      "title": "govEntSales 接入 MonthOnMonth + 初始值改业务字符串",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T19:25:00+08:00",
+      "completedAt": "2026-09-10T19:35:00+08:00",
+      "notes": "date: formatToday() = YYYY-MM-DD；week: formatCurrentWeek() = YYYY-WW；month: formatCurrentMonth() = YYYY-MM。footer slot 渲染 MonthOnMonth。"
+    },
+    {
+      "id": "6",
+      "title": "vue-tsc + vite build 验证",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T19:35:00+08:00",
+      "completedAt": "2026-09-10T19:40:00+08:00",
+      "notes": "vue-tsc EXIT 0；vite build 7.92s built 无错。"
+    },
+    {
+      "id": "7",
+      "title": "修正 §4.6 起始/终止边界 + 写入 spec.md",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T20:00:00+08:00",
+      "completedAt": "2026-09-10T20:40:00+08:00",
+      "notes": "对应老组件 use-calendar.ts:300-352 formatter disabled 逻辑、389-446 minDate/maxDate/defineMinDate/defineMaxDate/calendarTypeMap 边界体系；§4.6.1-§4.6.5 五个子节写完。DateTab 走 van-calendar min-date/max-date 自动 disabled；WeekTab/MonthTab picker 年份列限制；FestivalTab 节前/节后 N 列 disabled 计算；CustomTab §4.6.4 subtab 三态禁用规则。"
+    },
+    {
+      "id": "8",
+      "title": "【重要修正】撤回子组件 onMounted 强制定位 today 的错误改动",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T21:00:00+08:00",
+      "completedAt": "2026-09-10T21:30:00+08:00",
+      "notes": "错误改动的违反业务逻辑的代码全部撤回：DateTab 删 default-date prop、WeekTab/MonthTab/FestivalTab 删 onMounted 强制定位 today 块。原因是：与 wd-calendar-v2.use-calendar.ts:1002-1027 setCalendarValue() 不符——老组件 open() 只做深拷贝 modelValue 到内部 calendarValue，从不强制覆盖为 today。正确的业务逻辑：父组件给 modelValue（如 2023-XX-XX）就用它打开就停在 2023 月；父组件没给则 fillDefaultForEmptyTabs() 兜底今天（等同老组件 defineCalendarValue() 默认值）。已确认 vue-tsc + vite build 仍通过。"
+    },
+    {
+      "id": "9",
+      "title": "业务逻辑 1:1 对照表（合并到 spec.md §6）",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T21:30:00+08:00",
+      "completedAt": "2026-09-10T22:00:00+08:00",
+      "notes": "在 spec.md 新增 §6，列出每条业务逻辑在老组件文件中的位置 + Web 实现位置。如：defineMinDate/use-calendar.ts:389-394 → index.vue computeMin()。Week/Month picker 替代 wd-calendar-view → WeekTab.vue/MonthTab.vue 都是子组件自包含。"
+    },
+    {
+      "id": "10",
+      "title": "vue-tsc + vite build 最终验证（修正后）",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T22:00:00+08:00",
+      "completedAt": "2026-09-10T22:10:00+08:00",
+      "notes": "vue-tsc EXIT 0；vite build 6.45s built 无错。"
+    },
+    {
+      "id": "11",
+      "title": "修正日 tab 默认视觉位置（Vant Calendar scrollToDate API）",
+      "status": "done",
+      "owner": "trellis-implement",
+      "createdAt": "2026-09-10T22:30:00+08:00",
+      "completedAt": "2026-09-10T23:00:00+08:00",
+      "notes": "用 Vant Calendar 的合法 API：① :default-date=\"new Date()\"（v-model 空时 fallback，business logic 也最匹配老组件）；② 挂载后 calendarRef.scrollToDate(today) （视觉滚到今天所在的月份，不修改 v-model，保留 cacheModel 中父组件传入的业务值）。月/周/节日 tab 因为 picker 自身 model-value computed 默认 = today，所以 user 已经看到正常。日 tab 只有 van-calendar 这个 API 用法不对——原因是父组件 cacheModel.date 持久化保留了历史值（如 '2023-XX-XX'），van-calendar v-model 反映了它会显示 23-XX 月。修复后视觉默认滚到今天。符合用户的诉求（'日历打开默认不是今天' + '要看 UI 库文档 正确修复'）。vue-tsc + vite build 仍通过。"
+    }
+  ]
+}
