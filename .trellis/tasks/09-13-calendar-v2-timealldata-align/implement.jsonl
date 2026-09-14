@@ -1,1 +1,6 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/storehub-web/frontend/index.md", "reason": "storehub-web 前端规范总入口：Vue3+Vite+TS 约定与 API 调用模式，实现前必读"}
+{"file": ".trellis/spec/storehub-web/frontend/type-safety.md", "reason": "TS 严格模式与 no-any 约束：timeAllData 字段实现需保持类型安全，禁止 any"}
+{"file": ".trellis/spec/storehub-web/frontend/quality-guidelines.md", "reason": "代码质量规范：中文注释、必填模式、禁止模式"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "跨层数据流审查：timeAllData 从 CalendarV2 emit 到消费方的字段契约边界"}
+{"file": ".trellis/spec/guides/architecture-overview.md", "reason": "项目架构与调用链路：理解 storehub-web 子应用嵌入企业微信小程序的上下文"}
+{"file": ".trellis/tasks/09-13-calendar-v2-timealldata-align/research/timealldata-field-alignment.md", "reason": "本任务权威基准：源 defineTimeDataConfig vs web stringifyTimeAllData 的逐字段差异表 + 已确认正确项"}

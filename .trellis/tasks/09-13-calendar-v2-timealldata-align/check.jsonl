@@ -1,1 +1,6 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/storehub-web/frontend/quality-guidelines.md", "reason": "代码质量规范审查：禁止模式、必填模式（中文注释）、Code Review 清单"}
+{"file": ".trellis/spec/storehub-web/frontend/type-safety.md", "reason": "TS 严格性审查：no-any、类型收窄、TimeAllData 契约一致性"}
+{"file": ".trellis/spec/storehub-web/frontend/component-guidelines.md", "reason": "组件规范审查：CalendarV2 组件边界与对外事件契约不被破坏"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "识别重复模式：dayData/weekData/monthData 派生应复用单一函数，避免重复造轮子"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "跨层数据流核对：emit 的 timeAllData 与消费方字段语义一致"}
+{"file": ".trellis/tasks/09-13-calendar-v2-timealldata-align/research/timealldata-field-alignment.md", "reason": "验收基准：按差异表 §1 逐项核对 ❌/⚠️ 是否消除或经业务豁免"}

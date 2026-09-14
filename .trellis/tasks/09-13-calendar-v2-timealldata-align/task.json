@@ -3,7 +3,7 @@
   "name": "calendar-v2-timealldata-align",
   "title": "calendar-v2 自定义回显修复 + timeAllData 字段输出对齐旧组件",
   "description": "",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": "ai-store-api",
