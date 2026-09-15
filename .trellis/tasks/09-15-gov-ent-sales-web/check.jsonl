@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/storehub-servless/backend/index.md", "reason": "校验新增转发文件路径与 URL 一致、响应归一化（{code:0,data}）符合规范，并据自查 curl 段落核对自检方式"}
+{"file": ".trellis/spec/storehub-web/frontend/index.md", "reason": "校验 API 模块分层、http 拦截链用法、页面与 webview query 解码方式是否符合前端规范"}
+{"file": ".trellis/spec/guides/index.md", "reason": "跨仓库一致性检查依据：命名、目录组织、多仓库边界"}
