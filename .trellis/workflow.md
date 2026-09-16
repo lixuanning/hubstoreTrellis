@@ -155,6 +155,20 @@ Phase 3: Finish  → verify, update spec, commit, and wrap up
 - Complex task: ask whether you may create a Trellis task and enter planning. If the user says no, do not do broad inline implementation; explain, clarify scope, or suggest a smaller split.
 - User approval to create a task is not approval to start implementation. Planning still happens first.
 
+**Core principle**: 大功能/新功能/需调研 → 慢而全；简单调整/简单改动 → 快而准。流程重量由**本次改动的影响面**决定，不由任务本身的大小决定。
+
+### Change Triage（改动分级 · 任务 in_progress 之后的每一轮都要先判定）
+
+| 级别 | 判定 | 处理方式 |
+| --- | --- | --- |
+| 微调 | 单文件 · 纯样式/文案/常量/间距 · 一行式 bug 修复 | **轻量通道**：直接编辑 → 结束。不 dispatch 子代理、不回写 `implement.md`、不跑全量 type-check |
+| 常规 | 1–3 个文件 · 逻辑改动 · 新增小组件 | 直接编辑 + 改动文件的 `eslint`；动手前一行说明改哪个文件、几处 |
+| 重活 | 跨端/跨包 · 接口/类型/数据流 · 新功能 · 需求模糊 · 需调研 | 走完整流程（子代理 dispatch / 全量校验 / 文档回写 / Review gate） |
+
+- 轻量通道的收尾 = 「改动清单 + 一句验收点」，**不写文档、不建任务**。
+- 用户显式说「走完整流程」时，无论改动大小都按重活处理。
+- 拿不准时按**更轻一级**处理：先快速给出可看的结果，用户不满意再升级。
+
 ### Planning Artifacts
 
 - `prd.md` — requirements, constraints, and acceptance criteria. Do not put technical design or execution checklists here.
@@ -225,6 +239,7 @@ Sub-agent dispatch protocol applies to all platforms and all sub-agents, includi
 [workflow-state:in_progress]
 Tools: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
 Flow: `trellis-implement` -> `trellis-check` -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Change triage FIRST (see Phase Index -> Change Triage): 微调（单文件/纯样式/文案/一行修复）→ 直接编辑，不 dispatch 子代理、不回写 `implement.md`、不跑全量 type-check；常规（1–3 文件）→ 直接编辑 + 改动文件 eslint；重活才走下面这套完整流程。
 Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `trellis-implement`, do NOT spawn another `trellis-implement` or `trellis-check`; if already running as `trellis-check`, do NOT spawn another `trellis-check` or `trellis-implement`. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
 [/workflow-state:in_progress]
@@ -236,6 +251,7 @@ Dispatch prompt starts with `Active task: <task path from task.py current>`. Rea
 
 [workflow-state:in_progress-inline]
 Flow: `trellis-before-dev` -> edit -> `trellis-check` -> validation -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Change triage FIRST (see Phase Index -> Change Triage): 微调（单文件/纯样式/文案/一行修复）→ 直接编辑，不跑 `trellis-check`、不回写 `implement.md`、不跑全量 type-check；常规（1–3 文件）→ 直接编辑 + 改动文件 eslint；重活才走下面这套完整流程。
 Do not dispatch implement/check sub-agents in inline mode.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
 [/workflow-state:in_progress-inline]
@@ -294,6 +310,11 @@ When a user request matches one of these intents inside an active task, route fi
 - Task creation approval is not implementation approval; implementation waits for `task.py start` after artifact review.
 - PRD-only is valid for lightweight tasks; complex tasks need `design.md` + `implement.md`.
 - Planning must be persisted to task artifacts; checks must run before reporting completion.
+- **Change triage beats task size**: an `in_progress` task does NOT mean every turn runs the full flow. Micro-changes take the lightweight lane (edit → report → done).
+- **Question batching**: 简单任务禁止一轮一问，必须一次性列出全部待确认项。
+- **Black-box info**: 接口请求/响应结构这类无法从代码推断的信息，一次性向用户索要「真实请求 + 真实响应」，不要靠猜 + 反复试错。
+- **No silent tool batching**: 每批工具调用前用一行文字说明正在做什么，避免用户界面长时间无输出。
+- **Task granularity**: 主体交付完成即 `task.py finish`；后续 UI 微调不塞回老任务，也不新开任务。
 
 ### Loading Step Detail
 
@@ -333,7 +354,7 @@ Skip when `python3 ./.trellis/scripts/task.py current --source` already points t
 Load the `trellis-brainstorm` skill and explore requirements interactively with the user per the skill's guidance.
 
 The brainstorm skill will guide you to:
-- Ask one question at a time
+- **简单任务：一次性批量提问** —— 用 AskUserQuestion 一轮把所有待确认项列全（一次最多 4 个问题），禁止一轮一问。只有大功能/需求模糊时才逐轮深挖
 - Prefer researching over asking the user
 - Prefer offering options over open-ended questions
 - Update `prd.md` immediately after each user answer
@@ -554,6 +575,16 @@ Load the `trellis-check` skill and verify the code per its guidance:
 If issues are found → fix → re-check, until green.
 
 [/codex-inline, Kilo, Antigravity, Devin]
+
+**Validation tiers（按改动面选择，不要无脑全量）**:
+
+| 改动面 | 校验 |
+| --- | --- |
+| 纯样式 / 文案 / 常量 | 不跑，或只跑改动文件的 `npx eslint <file>` |
+| 单个 `.ts` / `.vue` 的逻辑 | `npx eslint <changed files>` |
+| 接口层 / 类型定义 / 跨包数据流 | 全量 `npx vue-tsc -b` + full-scope 2.2 |
+
+This tiering applies to **迭代过程中的中间校验** only. The final 2.2 before Phase 3.4 commit still runs full-scope (next paragraph).
 
 **Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
 

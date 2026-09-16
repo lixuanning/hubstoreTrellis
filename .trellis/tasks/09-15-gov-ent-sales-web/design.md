@@ -139,6 +139,6 @@ export const sacAgencySaleTransDtl = (params: Record<string, unknown> = {}): Pro
 
 ## 5. 未决点
 
-1. `detail[]` 每行字段名：文档未标注层级，暂定 `orderNo` / `totalSaleAmt` / `storeSaleAmt` / `agencySaleAmt`，门店名可能为 `orgName` 或 `storeName`。**实现时先按假设写，联调 phase 用 curl 真实响应校正。**
+1. ✅ **已由真实响应校正**（2026-09-15）：数仓 disp 响应中业务数据统一在 `content` 内、且 `content` 为**数组**（取首项）；`detail[]` 每行字段为 `orgCode / orgName / transNo / totalSaleAmt / storeSaleAmt / agencySaleAmt`（**订单号 = `transNo`**，**门店名 = `orgName`**；金额为字符串，如 `"11.22"`）。分页字段 `page / size / pages / total / first / last` 在**响应根层**，与 `content` 平级；`content[0]` 内另有 `syncTime / orderCnt`。故页面用 `pickContent()` 统一取值。
 2. `/home/sacAgencySaleSummary` 是否需要 `permission`：倾向不需要；若上游/网关要求，参照 `getHotSaleSingle.post.ts` 补 `dataLinkPermissionChecker`。
 3. `queryType=3`（按年）：web `calendar-v2/types.ts` 的 `ApiTimeParams.queryType` 类型为 `0|1|2|4`，不含 3。若日历可能产出 3，需要在本页做类型断言/映射；否则忽略。
