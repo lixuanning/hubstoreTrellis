@@ -11,6 +11,7 @@
 | [Trellis 是什么 & 怎么用](./trellis-what-and-how.md) | **所有人先看这个** | 理解 Trellis 怎么工作、你日常怎么做、规范怎么维护 |
 | [Trellis 集成实验文档](./trellis-integration-experiment.md) | 想了解完整过程的同事 | 了解安装、配置、关键决策、推广建议 |
 | [百果AI助手产品蓝图](./ai-assistant-roadmap.md) | 产品 / 技术 | 了解 AI 功能的产品规划和架构方案 |
+| [百果AI助手 模块设计](./百果AI助手-模块设计.md) | 产品 / 技术 / 开发 | 了解 AI 助手的模块划分、接口协议与实施约束 |
 | [MCP 设计与使用指南](./mcp-design-and-usage.md) | 开发者 | 配置 AI 编辑器的外部工具（设计稿、接口文档、搜索等） |
 
 ---
@@ -23,6 +24,7 @@ storehub/
 │   ├── trellis-what-and-how.md
 │   ├── trellis-integration-experiment.md
 │   ├── ai-assistant-roadmap.md
+│   ├── 百果AI助手-模块设计.md
 │   └── mcp-design-and-usage.md
 │
 └── .trellis/spec/     ← AI 自动读（不用人看）
