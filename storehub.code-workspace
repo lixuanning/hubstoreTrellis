@@ -94,5 +94,8 @@
   "launch": {
     "configurations": [],
     "compounds": []
-  }
+},
+"trae": {
+	"workspaceId": "d0ab77e804147f55ff67b3d2c398aae4"
+}
 }
